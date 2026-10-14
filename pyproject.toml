@@ -1,11 +1,12 @@
 [project]
 name = "recoms"
 dynamic = ["version"]
-license-files = ["/fern/config/LICENSE"]
+license = "MIT"
+license-files = ["LICENSE"]
 
 [tool.poetry]
 name = "recoms"
-version = "0.1.0"
+version = "v0.1.0"
 description = "Server-side SDK for the RECOMS comments API"
 readme = "README.md"
 authors = []
@@ -15,6 +16,7 @@ keywords = [
     "moderation",
     "sdk"
 ]
+license = "MIT"
 classifiers = [
     "Intended Audience :: Developers",
     "Programming Language :: Python",
