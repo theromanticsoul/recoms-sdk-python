@@ -4,9 +4,9 @@ import typing
 
 from ..core.client_wrapper import AsyncClientWrapper, SyncClientWrapper
 from ..core.request_options import RequestOptions
-from ..types.accessible_project import AccessibleProject
-from ..types.o_auth_availability import OAuthAvailability
 from .raw_client import AsyncRawDashboardClient, RawDashboardClient
+from .types.config_dashboard_response import ConfigDashboardResponse
+from .types.projects_dashboard_response import ProjectsDashboardResponse
 
 
 class DashboardClient:
@@ -24,9 +24,9 @@ class DashboardClient:
         """
         return self._raw_client
 
-    def projects(self, *, request_options: typing.Optional[RequestOptions] = None) -> typing.List[AccessibleProject]:
+    def projects(self, *, request_options: typing.Optional[RequestOptions] = None) -> ProjectsDashboardResponse:
         """
-        Dashboard bootstrap operation. Only the verified account's memberships are returned; project keys cannot enumerate accounts or projects.
+        List projects accessible to the authenticated RECOMS account, ordered by membership creation time. Project-only API keys do not grant account-wide access. Returns membership identity and role with each project; organizationId identifies the project, while id identifies the membership. Moderation rules are redacted to empty strings for roles other than owner/admin. Credentials are never returned. An account with no memberships receives an empty data array.
 
         Parameters
         ----------
@@ -35,7 +35,7 @@ class DashboardClient:
 
         Returns
         -------
-        typing.List[AccessibleProject]
+        ProjectsDashboardResponse
             Operation completed successfully.
 
         Examples
@@ -50,9 +50,9 @@ class DashboardClient:
         _response = self._raw_client.projects(request_options=request_options)
         return _response.data
 
-    def config(self, *, request_options: typing.Optional[RequestOptions] = None) -> OAuthAvailability:
+    def config(self, *, request_options: typing.Optional[RequestOptions] = None) -> ConfigDashboardResponse:
         """
-        Returns only provider availability, with no client secrets or database information.
+        Read the availability of Google and GitHub sign-in for this deployment. This anonymous read returns only boolean availability, never provider credentials, account data or configuration secrets. It does not change state.
 
         Parameters
         ----------
@@ -61,7 +61,7 @@ class DashboardClient:
 
         Returns
         -------
-        OAuthAvailability
+        ConfigDashboardResponse
             Available authentication providers.
 
         Examples
@@ -92,11 +92,9 @@ class AsyncDashboardClient:
         """
         return self._raw_client
 
-    async def projects(
-        self, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> typing.List[AccessibleProject]:
+    async def projects(self, *, request_options: typing.Optional[RequestOptions] = None) -> ProjectsDashboardResponse:
         """
-        Dashboard bootstrap operation. Only the verified account's memberships are returned; project keys cannot enumerate accounts or projects.
+        List projects accessible to the authenticated RECOMS account, ordered by membership creation time. Project-only API keys do not grant account-wide access. Returns membership identity and role with each project; organizationId identifies the project, while id identifies the membership. Moderation rules are redacted to empty strings for roles other than owner/admin. Credentials are never returned. An account with no memberships receives an empty data array.
 
         Parameters
         ----------
@@ -105,7 +103,7 @@ class AsyncDashboardClient:
 
         Returns
         -------
-        typing.List[AccessibleProject]
+        ProjectsDashboardResponse
             Operation completed successfully.
 
         Examples
@@ -128,9 +126,9 @@ class AsyncDashboardClient:
         _response = await self._raw_client.projects(request_options=request_options)
         return _response.data
 
-    async def config(self, *, request_options: typing.Optional[RequestOptions] = None) -> OAuthAvailability:
+    async def config(self, *, request_options: typing.Optional[RequestOptions] = None) -> ConfigDashboardResponse:
         """
-        Returns only provider availability, with no client secrets or database information.
+        Read the availability of Google and GitHub sign-in for this deployment. This anonymous read returns only boolean availability, never provider credentials, account data or configuration secrets. It does not change state.
 
         Parameters
         ----------
@@ -139,7 +137,7 @@ class AsyncDashboardClient:
 
         Returns
         -------
-        OAuthAvailability
+        ConfigDashboardResponse
             Available authentication providers.
 
         Examples

@@ -4,8 +4,8 @@ import typing
 
 from ...core.client_wrapper import AsyncClientWrapper, SyncClientWrapper
 from ...core.request_options import RequestOptions
-from ...types.project_action_result import ProjectActionResult
 from .raw_client import AsyncRawModerationClient, RawModerationClient
+from .types.test_moderation_response import TestModerationResponse
 
 # this is used as the default value for optional parameters
 OMIT = typing.cast(typing.Any, ...)
@@ -27,15 +27,10 @@ class ModerationClient:
         return self._raw_client
 
     def test(
-        self,
-        *,
-        moderation_policy: str,
-        example_comment: str,
-        project_id: typing.Optional[str] = None,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> ProjectActionResult:
+        self, *, moderation_policy: str, example_comment: str, request_options: typing.Optional[RequestOptions] = None
+    ) -> TestModerationResponse:
         """
-        testModerationPolicy. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Test draft rules against example text using the current provider. Requires provider:test. No policy or comment is saved; no submission quota is consumed. The provider attempt is recorded and the separate provider-test rate limit applies. ALLOWED and DISALLOWED are successful test outcomes. Provider absence or technical failure returns PROVIDER_UNAVAILABLE rather than a content rejection. RATE_LIMITED includes Retry-After. Available while frozen.
 
         Parameters
         ----------
@@ -45,15 +40,12 @@ class ModerationClient:
         example_comment : str
             Markdown source, preserved without trimming. Must contain non-whitespace text and at most 2,000 Unicode code points. U+0000 and unpaired UTF-16 surrogates are forbidden. Render Markdown safely in your application's UI.
 
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectActionResult
+        TestModerationResponse
             Operation completed successfully.
 
         Examples
@@ -64,15 +56,12 @@ class ModerationClient:
             token="YOUR_TOKEN",
         )
         client.project.moderation.test(
-            moderation_policy="moderationPolicy",
-            example_comment="This explanation of **cursor pagination** was helpful.",
+            moderation_policy="Reject unsolicited advertising; allow relevant discussion.",
+            example_comment="Thank you for this explanation.",
         )
         """
         _response = self._raw_client.test(
-            moderation_policy=moderation_policy,
-            example_comment=example_comment,
-            project_id=project_id,
-            request_options=request_options,
+            moderation_policy=moderation_policy, example_comment=example_comment, request_options=request_options
         )
         return _response.data
 
@@ -93,15 +82,10 @@ class AsyncModerationClient:
         return self._raw_client
 
     async def test(
-        self,
-        *,
-        moderation_policy: str,
-        example_comment: str,
-        project_id: typing.Optional[str] = None,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> ProjectActionResult:
+        self, *, moderation_policy: str, example_comment: str, request_options: typing.Optional[RequestOptions] = None
+    ) -> TestModerationResponse:
         """
-        testModerationPolicy. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Test draft rules against example text using the current provider. Requires provider:test. No policy or comment is saved; no submission quota is consumed. The provider attempt is recorded and the separate provider-test rate limit applies. ALLOWED and DISALLOWED are successful test outcomes. Provider absence or technical failure returns PROVIDER_UNAVAILABLE rather than a content rejection. RATE_LIMITED includes Retry-After. Available while frozen.
 
         Parameters
         ----------
@@ -111,15 +95,12 @@ class AsyncModerationClient:
         example_comment : str
             Markdown source, preserved without trimming. Must contain non-whitespace text and at most 2,000 Unicode code points. U+0000 and unpaired UTF-16 surrogates are forbidden. Render Markdown safely in your application's UI.
 
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectActionResult
+        TestModerationResponse
             Operation completed successfully.
 
         Examples
@@ -135,17 +116,14 @@ class AsyncModerationClient:
 
         async def main() -> None:
             await client.project.moderation.test(
-                moderation_policy="moderationPolicy",
-                example_comment="This explanation of **cursor pagination** was helpful.",
+                moderation_policy="Reject unsolicited advertising; allow relevant discussion.",
+                example_comment="Thank you for this explanation.",
             )
 
 
         asyncio.run(main())
         """
         _response = await self._raw_client.test(
-            moderation_policy=moderation_policy,
-            example_comment=example_comment,
-            project_id=project_id,
-            request_options=request_options,
+            moderation_policy=moderation_policy, example_comment=example_comment, request_options=request_options
         )
         return _response.data

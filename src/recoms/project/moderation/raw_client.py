@@ -10,13 +10,21 @@ from ...core.idempotency import generate_idempotency_key
 from ...core.parse_error import ParsingError
 from ...core.pydantic_utilities import parse_obj_as
 from ...core.request_options import RequestOptions
+from ...errors.bad_gateway_error import BadGatewayError
 from ...errors.bad_request_error import BadRequestError
+from ...errors.conflict_error import ConflictError
+from ...errors.content_too_large_error import ContentTooLargeError
 from ...errors.forbidden_error import ForbiddenError
 from ...errors.internal_server_error import InternalServerError
 from ...errors.not_found_error import NotFoundError
+from ...errors.too_many_requests_error import TooManyRequestsError
 from ...errors.unauthorized_error import UnauthorizedError
-from ...types.error_response import ErrorResponse
-from ...types.project_action_result import ProjectActionResult
+from ...types.authentication_required_error_response import AuthenticationRequiredErrorResponse
+from ...types.internal_error_response import InternalErrorResponse
+from ...types.provider_unavailable_error_response import ProviderUnavailableErrorResponse
+from ...types.rate_limited_error_response import RateLimitedErrorResponse
+from ...types.request_body_too_large_error_response import RequestBodyTooLargeErrorResponse
+from .types.test_moderation_response import TestModerationResponse
 from pydantic import ValidationError
 
 # this is used as the default value for optional parameters
@@ -28,15 +36,10 @@ class RawModerationClient:
         self._client_wrapper = client_wrapper
 
     def test(
-        self,
-        *,
-        moderation_policy: str,
-        example_comment: str,
-        project_id: typing.Optional[str] = None,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> HttpResponse[ProjectActionResult]:
+        self, *, moderation_policy: str, example_comment: str, request_options: typing.Optional[RequestOptions] = None
+    ) -> HttpResponse[TestModerationResponse]:
         """
-        testModerationPolicy. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Test draft rules against example text using the current provider. Requires provider:test. No policy or comment is saved; no submission quota is consumed. The provider attempt is recorded and the separate provider-test rate limit applies. ALLOWED and DISALLOWED are successful test outcomes. Provider absence or technical failure returns PROVIDER_UNAVAILABLE rather than a content rejection. RATE_LIMITED includes Retry-After. Available while frozen.
 
         Parameters
         ----------
@@ -46,15 +49,12 @@ class RawModerationClient:
         example_comment : str
             Markdown source, preserved without trimming. Must contain non-whitespace text and at most 2,000 Unicode code points. U+0000 and unpaired UTF-16 surrogates are forbidden. Render Markdown safely in your application's UI.
 
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        HttpResponse[ProjectActionResult]
+        HttpResponse[TestModerationResponse]
             Operation completed successfully.
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -66,7 +66,6 @@ class RawModerationClient:
             },
             headers={
                 "content-type": "application/json",
-                "x-project-id": str(project_id) if project_id is not None else None,
                 "Idempotency-Key": generate_idempotency_key(),
             },
             request_options=request_options,
@@ -75,9 +74,9 @@ class RawModerationClient:
         try:
             if 200 <= _response.status_code < 300:
                 _data = typing.cast(
-                    ProjectActionResult,
+                    TestModerationResponse,
                     parse_obj_as(
-                        type_=ProjectActionResult,  # type: ignore
+                        type_=TestModerationResponse,  # type: ignore
                         object_=_response.json(),
                     ),
                 )
@@ -86,9 +85,9 @@ class RawModerationClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -97,9 +96,9 @@ class RawModerationClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -108,9 +107,9 @@ class RawModerationClient:
                 raise ForbiddenError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -119,9 +118,42 @@ class RawModerationClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 409:
+                raise ConflictError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        typing.Any,
+                        parse_obj_as(
+                            type_=typing.Any,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 413:
+                raise ContentTooLargeError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        RequestBodyTooLargeErrorResponse,
+                        parse_obj_as(
+                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 429:
+                raise TooManyRequestsError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        RateLimitedErrorResponse,
+                        parse_obj_as(
+                            type_=RateLimitedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -130,9 +162,20 @@ class RawModerationClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 502:
+                raise BadGatewayError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        ProviderUnavailableErrorResponse,
+                        parse_obj_as(
+                            type_=ProviderUnavailableErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -152,15 +195,10 @@ class AsyncRawModerationClient:
         self._client_wrapper = client_wrapper
 
     async def test(
-        self,
-        *,
-        moderation_policy: str,
-        example_comment: str,
-        project_id: typing.Optional[str] = None,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> AsyncHttpResponse[ProjectActionResult]:
+        self, *, moderation_policy: str, example_comment: str, request_options: typing.Optional[RequestOptions] = None
+    ) -> AsyncHttpResponse[TestModerationResponse]:
         """
-        testModerationPolicy. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Test draft rules against example text using the current provider. Requires provider:test. No policy or comment is saved; no submission quota is consumed. The provider attempt is recorded and the separate provider-test rate limit applies. ALLOWED and DISALLOWED are successful test outcomes. Provider absence or technical failure returns PROVIDER_UNAVAILABLE rather than a content rejection. RATE_LIMITED includes Retry-After. Available while frozen.
 
         Parameters
         ----------
@@ -170,15 +208,12 @@ class AsyncRawModerationClient:
         example_comment : str
             Markdown source, preserved without trimming. Must contain non-whitespace text and at most 2,000 Unicode code points. U+0000 and unpaired UTF-16 surrogates are forbidden. Render Markdown safely in your application's UI.
 
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        AsyncHttpResponse[ProjectActionResult]
+        AsyncHttpResponse[TestModerationResponse]
             Operation completed successfully.
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -190,7 +225,6 @@ class AsyncRawModerationClient:
             },
             headers={
                 "content-type": "application/json",
-                "x-project-id": str(project_id) if project_id is not None else None,
                 "Idempotency-Key": generate_idempotency_key(),
             },
             request_options=request_options,
@@ -199,9 +233,9 @@ class AsyncRawModerationClient:
         try:
             if 200 <= _response.status_code < 300:
                 _data = typing.cast(
-                    ProjectActionResult,
+                    TestModerationResponse,
                     parse_obj_as(
-                        type_=ProjectActionResult,  # type: ignore
+                        type_=TestModerationResponse,  # type: ignore
                         object_=_response.json(),
                     ),
                 )
@@ -210,9 +244,9 @@ class AsyncRawModerationClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -221,9 +255,9 @@ class AsyncRawModerationClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -232,9 +266,9 @@ class AsyncRawModerationClient:
                 raise ForbiddenError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -243,9 +277,42 @@ class AsyncRawModerationClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 409:
+                raise ConflictError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        typing.Any,
+                        parse_obj_as(
+                            type_=typing.Any,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 413:
+                raise ContentTooLargeError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        RequestBodyTooLargeErrorResponse,
+                        parse_obj_as(
+                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 429:
+                raise TooManyRequestsError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        RateLimitedErrorResponse,
+                        parse_obj_as(
+                            type_=RateLimitedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -254,9 +321,20 @@ class AsyncRawModerationClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 502:
+                raise BadGatewayError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        ProviderUnavailableErrorResponse,
+                        parse_obj_as(
+                            type_=ProviderUnavailableErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),

@@ -3,38 +3,18 @@
 import typing
 
 import pydantic
-import typing_extensions
 from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
-from ..core.serialization import FieldMetadata
-from .policy_test_result import PolicyTestResult
-from .project_action_result_status import ProjectActionResultStatus
 
 
 class ProjectActionResult(UniversalBaseModel):
-    status: ProjectActionResultStatus = pydantic.Field()
     """
-    Application outcome; inspect message for actionable failures and policyTest for test decisions.
+    Operation result; inspect its fields as documented by this endpoint.
     """
 
     message: typing.Optional[str] = pydantic.Field(default=None)
     """
     Safe user-facing result or recovery guidance; omitted when no message is needed.
     """
-
-    saved_policy: typing_extensions.Annotated[
-        typing.Optional[str],
-        FieldMetadata(alias="savedPolicy"),
-        pydantic.Field(
-            alias="savedPolicy", description="Normalized policy after a successful save; omitted for other operations."
-        ),
-    ] = None
-    """
-    Normalized policy after a successful save; omitted for other operations.
-    """
-
-    policy_test: typing_extensions.Annotated[
-        typing.Optional[PolicyTestResult], FieldMetadata(alias="policyTest"), pydantic.Field(alias="policyTest")
-    ] = None
 
     if IS_PYDANTIC_V2:
         model_config: typing.ClassVar[pydantic.ConfigDict] = pydantic.ConfigDict(extra="allow", frozen=True)  # type: ignore # Pydantic v2

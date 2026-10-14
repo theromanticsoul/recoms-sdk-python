@@ -7,10 +7,10 @@ from ...core.request_options import RequestOptions
 from ...types.dashboard_comment_sort import DashboardCommentSort
 from ...types.dashboard_comment_status import DashboardCommentStatus
 from ...types.dashboard_comments import DashboardComments
-from ...types.project_action_result import ProjectActionResult
-from ...types.project_review_queues import ProjectReviewQueues
 from .raw_client import AsyncRawCommentsClient, RawCommentsClient
+from .types.queues_comments_response import QueuesCommentsResponse
 from .types.review_comment_decision import ReviewCommentDecision
+from .types.review_comments_response import ReviewCommentsResponse
 
 # this is used as the default value for optional parameters
 OMIT = typing.cast(typing.Any, ...)
@@ -31,23 +31,18 @@ class CommentsClient:
         """
         return self._raw_client
 
-    def queues(
-        self, *, project_id: typing.Optional[str] = None, request_options: typing.Optional[RequestOptions] = None
-    ) -> ProjectReviewQueues:
+    def queues(self, *, request_options: typing.Optional[RequestOptions] = None) -> QueuesCommentsResponse:
         """
-        Read the number of revisions awaiting review. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Count the latest PENDING and FAILED revisions of live comments, including pending edits of already published comments. Requires comments:read. Deleted comments are excluded. FAILED is a technical check failure, not rejection. These counts and a separate list are not a shared snapshot. Available while frozen.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectReviewQueues
+        QueuesCommentsResponse
             Operation completed successfully.
 
         Examples
@@ -59,7 +54,7 @@ class CommentsClient:
         )
         client.project.comments.queues()
         """
-        _response = self._raw_client.queues(project_id=project_id, request_options=request_options)
+        _response = self._raw_client.queues(request_options=request_options)
         return _response.data
 
     def list(
@@ -70,15 +65,15 @@ class CommentsClient:
         sort: typing.Optional[DashboardCommentSort] = None,
         limit: typing.Optional[int] = None,
         cursor: typing.Optional[str] = None,
-        project_id: typing.Optional[str] = None,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> DashboardComments:
         """
-        List comments including moderation state. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        List roots and replies with their latest moderation revision. Requires comments:read. Filter status follows the latest revision, so an approved comment with a pending edit appears under PENDING. Creation time or current reaction/reply counts determine order; ID breaks ties. Continue with nextCursor and identical filters/sort; null ends pagination. Pages are not a snapshot. hasComments ignores filters; queues describes moderation backlog. Available while frozen; no write permits are consumed.
 
         Parameters
         ----------
         search : typing.Optional[str]
+            Text search in comment content; at most 512 Unicode code points. Omit or use an empty string for no text filter.
 
         status : typing.Optional[DashboardCommentStatus]
             Filter by latest revision decision or deleted node. ALL and unpublished states require moderation access.
@@ -87,11 +82,10 @@ class CommentsClient:
             Creation time descending or ascending, total reactions descending, or published direct reply count descending; identifier breaks ties.
 
         limit : typing.Optional[int]
+            Maximum rows in this page, inclusive range 1–100.
 
         cursor : typing.Optional[str]
-
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
+            Opaque nextCursor from the preceding page. Keep filters and sort unchanged; incompatible tokens return INVALID_CURSOR. Omit to restart. Pagination is not a snapshot.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -111,13 +105,7 @@ class CommentsClient:
         client.project.comments.list()
         """
         _response = self._raw_client.list(
-            search=search,
-            status=status,
-            sort=sort,
-            limit=limit,
-            cursor=cursor,
-            project_id=project_id,
-            request_options=request_options,
+            search=search, status=status, sort=sort, limit=limit, cursor=cursor, request_options=request_options
         )
         return _response.data
 
@@ -127,32 +115,28 @@ class CommentsClient:
         *,
         revision_id: str,
         decision: ReviewCommentDecision,
-        project_id: typing.Optional[str] = None,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> ProjectActionResult:
+    ) -> ReviewCommentsResponse:
         """
-        Approve or reject the latest pending revision. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Approve or reject the specified latest PENDING or FAILED revision. Requires comments:review. Approval publishes that revision; rejection retains an earlier approved version. A key decision has no verified moderator-account attribution. A stale or already decided revision returns REVISION_ALREADY_REVIEWED. Refresh before another action or after an uncertain network outcome; this operation does not replay Idempotency-Key. Available while frozen.
 
         Parameters
         ----------
         comment_id : str
-            RECOMS identifier generated by the service.
+            RECOMS-generated UUID. Copy it from the corresponding project, member, comment or revision response; identifiers are not interchangeable.
 
         revision_id : str
-            Latest pending revision being reviewed; refresh if another decision has already been recorded.
+            Latest PENDING or FAILED revision being reviewed; refresh if another decision has already been recorded. Copy the revision ID, not the comment ID.
 
         decision : ReviewCommentDecision
             Publish this revision or reject it while retaining any previously approved public version.
-
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectActionResult
+        ReviewCommentsResponse
             Operation completed successfully.
 
         Examples
@@ -163,17 +147,13 @@ class CommentsClient:
             token="YOUR_TOKEN",
         )
         client.project.comments.review(
-            comment_id="commentId",
-            revision_id="revisionId",
+            comment_id="0198a6ec-9e00-7000-8000-000000000001",
+            revision_id="0198a6ec-9e00-7000-8000-000000000003",
             decision="APPROVED",
         )
         """
         _response = self._raw_client.review(
-            comment_id,
-            revision_id=revision_id,
-            decision=decision,
-            project_id=project_id,
-            request_options=request_options,
+            comment_id, revision_id=revision_id, decision=decision, request_options=request_options
         )
         return _response.data
 
@@ -193,23 +173,18 @@ class AsyncCommentsClient:
         """
         return self._raw_client
 
-    async def queues(
-        self, *, project_id: typing.Optional[str] = None, request_options: typing.Optional[RequestOptions] = None
-    ) -> ProjectReviewQueues:
+    async def queues(self, *, request_options: typing.Optional[RequestOptions] = None) -> QueuesCommentsResponse:
         """
-        Read the number of revisions awaiting review. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Count the latest PENDING and FAILED revisions of live comments, including pending edits of already published comments. Requires comments:read. Deleted comments are excluded. FAILED is a technical check failure, not rejection. These counts and a separate list are not a shared snapshot. Available while frozen.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectReviewQueues
+        QueuesCommentsResponse
             Operation completed successfully.
 
         Examples
@@ -229,7 +204,7 @@ class AsyncCommentsClient:
 
         asyncio.run(main())
         """
-        _response = await self._raw_client.queues(project_id=project_id, request_options=request_options)
+        _response = await self._raw_client.queues(request_options=request_options)
         return _response.data
 
     async def list(
@@ -240,15 +215,15 @@ class AsyncCommentsClient:
         sort: typing.Optional[DashboardCommentSort] = None,
         limit: typing.Optional[int] = None,
         cursor: typing.Optional[str] = None,
-        project_id: typing.Optional[str] = None,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> DashboardComments:
         """
-        List comments including moderation state. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        List roots and replies with their latest moderation revision. Requires comments:read. Filter status follows the latest revision, so an approved comment with a pending edit appears under PENDING. Creation time or current reaction/reply counts determine order; ID breaks ties. Continue with nextCursor and identical filters/sort; null ends pagination. Pages are not a snapshot. hasComments ignores filters; queues describes moderation backlog. Available while frozen; no write permits are consumed.
 
         Parameters
         ----------
         search : typing.Optional[str]
+            Text search in comment content; at most 512 Unicode code points. Omit or use an empty string for no text filter.
 
         status : typing.Optional[DashboardCommentStatus]
             Filter by latest revision decision or deleted node. ALL and unpublished states require moderation access.
@@ -257,11 +232,10 @@ class AsyncCommentsClient:
             Creation time descending or ascending, total reactions descending, or published direct reply count descending; identifier breaks ties.
 
         limit : typing.Optional[int]
+            Maximum rows in this page, inclusive range 1–100.
 
         cursor : typing.Optional[str]
-
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
+            Opaque nextCursor from the preceding page. Keep filters and sort unchanged; incompatible tokens return INVALID_CURSOR. Omit to restart. Pagination is not a snapshot.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -289,13 +263,7 @@ class AsyncCommentsClient:
         asyncio.run(main())
         """
         _response = await self._raw_client.list(
-            search=search,
-            status=status,
-            sort=sort,
-            limit=limit,
-            cursor=cursor,
-            project_id=project_id,
-            request_options=request_options,
+            search=search, status=status, sort=sort, limit=limit, cursor=cursor, request_options=request_options
         )
         return _response.data
 
@@ -305,32 +273,28 @@ class AsyncCommentsClient:
         *,
         revision_id: str,
         decision: ReviewCommentDecision,
-        project_id: typing.Optional[str] = None,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> ProjectActionResult:
+    ) -> ReviewCommentsResponse:
         """
-        Approve or reject the latest pending revision. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Approve or reject the specified latest PENDING or FAILED revision. Requires comments:review. Approval publishes that revision; rejection retains an earlier approved version. A key decision has no verified moderator-account attribution. A stale or already decided revision returns REVISION_ALREADY_REVIEWED. Refresh before another action or after an uncertain network outcome; this operation does not replay Idempotency-Key. Available while frozen.
 
         Parameters
         ----------
         comment_id : str
-            RECOMS identifier generated by the service.
+            RECOMS-generated UUID. Copy it from the corresponding project, member, comment or revision response; identifiers are not interchangeable.
 
         revision_id : str
-            Latest pending revision being reviewed; refresh if another decision has already been recorded.
+            Latest PENDING or FAILED revision being reviewed; refresh if another decision has already been recorded. Copy the revision ID, not the comment ID.
 
         decision : ReviewCommentDecision
             Publish this revision or reject it while retaining any previously approved public version.
-
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectActionResult
+        ReviewCommentsResponse
             Operation completed successfully.
 
         Examples
@@ -346,8 +310,8 @@ class AsyncCommentsClient:
 
         async def main() -> None:
             await client.project.comments.review(
-                comment_id="commentId",
-                revision_id="revisionId",
+                comment_id="0198a6ec-9e00-7000-8000-000000000001",
+                revision_id="0198a6ec-9e00-7000-8000-000000000003",
                 decision="APPROVED",
             )
 
@@ -355,10 +319,6 @@ class AsyncCommentsClient:
         asyncio.run(main())
         """
         _response = await self._raw_client.review(
-            comment_id,
-            revision_id=revision_id,
-            decision=decision,
-            project_id=project_id,
-            request_options=request_options,
+            comment_id, revision_id=revision_id, decision=decision, request_options=request_options
         )
         return _response.data

@@ -6,12 +6,38 @@ import typing
 from importlib import import_module
 
 if typing.TYPE_CHECKING:
+    from .types import (
+        ActivateProjectResponse,
+        AnalyticsProjectResponse,
+        FreezeProjectResponse,
+        GetProjectResponse,
+        TransferOwnershipProjectResponse,
+        UpdateProjectResponse,
+        UsageProjectResponse,
+        UsageProjectResponseData,
+        UsageProjectResponseDataPeriod,
+    )
     from . import comments, moderation, provider
-    from .comments import ReviewCommentDecision
-    from .provider import ConfigureProviderCredentialIntent
+    from .comments import QueuesCommentsResponse, ReviewCommentDecision, ReviewCommentsResponse
+    from .moderation import TestModerationResponse
+    from .provider import ConfigureProviderCredentialIntent, ConfigureProviderResponse, TestProviderResponse
 _dynamic_imports: typing.Dict[str, str] = {
+    "ActivateProjectResponse": ".types",
+    "AnalyticsProjectResponse": ".types",
     "ConfigureProviderCredentialIntent": ".provider",
+    "ConfigureProviderResponse": ".provider",
+    "FreezeProjectResponse": ".types",
+    "GetProjectResponse": ".types",
+    "QueuesCommentsResponse": ".comments",
     "ReviewCommentDecision": ".comments",
+    "ReviewCommentsResponse": ".comments",
+    "TestModerationResponse": ".moderation",
+    "TestProviderResponse": ".provider",
+    "TransferOwnershipProjectResponse": ".types",
+    "UpdateProjectResponse": ".types",
+    "UsageProjectResponse": ".types",
+    "UsageProjectResponseData": ".types",
+    "UsageProjectResponseDataPeriod": ".types",
     "comments": ".comments",
     "moderation": ".moderation",
     "provider": ".provider",
@@ -39,4 +65,24 @@ def __dir__():
     return sorted(lazy_attrs)
 
 
-__all__ = ["ConfigureProviderCredentialIntent", "ReviewCommentDecision", "comments", "moderation", "provider"]
+__all__ = [
+    "ActivateProjectResponse",
+    "AnalyticsProjectResponse",
+    "ConfigureProviderCredentialIntent",
+    "ConfigureProviderResponse",
+    "FreezeProjectResponse",
+    "GetProjectResponse",
+    "QueuesCommentsResponse",
+    "ReviewCommentDecision",
+    "ReviewCommentsResponse",
+    "TestModerationResponse",
+    "TestProviderResponse",
+    "TransferOwnershipProjectResponse",
+    "UpdateProjectResponse",
+    "UsageProjectResponse",
+    "UsageProjectResponseData",
+    "UsageProjectResponseDataPeriod",
+    "comments",
+    "moderation",
+    "provider",
+]

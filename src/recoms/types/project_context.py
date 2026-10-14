@@ -11,6 +11,10 @@ from .project_membership import ProjectMembership
 
 
 class ProjectContext(UniversalBaseModel):
+    """
+    Operation result; inspect its fields as documented by this endpoint.
+    """
+
     project: Project
     membership: ProjectMembership
     default_moderation_policy: typing_extensions.Annotated[

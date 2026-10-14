@@ -38,13 +38,15 @@ class ReactionsClient:
         """
         Restore liked/disliked UI state after a reload without writing or persisting reaction state in your own database. Your backend authenticates the user before supplying X-Author-User-Id. Returns only that user's existing reactions on APPROVED, non-deleted comments in the key's project and required resource; pending edits preserve existing public visibility. Optionally repeat commentId (maximum 100) to restrict to rendered comments. Ordered by reaction creation time descending, then reaction ID descending. limit defaults to 20 (1–100). Continue using nextCursor with the same project, author, resource and commentId filter set; null ends the list. Read-only, available in frozen projects, consumes no write permits; no separate read rate limiter is applied.
 
+        Required API-key permission: comments:read. A valid key without this permission is not sufficient; author identity and ownership requirements still apply where documented.
+
         Parameters
         ----------
         resource_id : str
-            Opaque identifier assigned by your backend to the resource being discussed, such as an article or product. Use the same value for its entire discussion. Required, non-empty, at most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is an identifier, not a resource URL.
+            Opaque identifier assigned by your backend to the resource being discussed, such as an article or product. Use the same value for its entire discussion. Required, 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. Slashes are accepted; URL-encode it in query parameters. This is an identifier, not a resource URL.
 
         author_user_id : str
-            Stable, non-empty external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. At most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+            Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
 
         comment_ids : typing.Optional[typing.Union[str, typing.Sequence[str]]]
             Optional rendered comment IDs. Repeat commentId in the query (not comma-separated); at most 100 values. Omit to read all of the author's public reactions in this resource. Comments without a reaction are absent.
@@ -120,13 +122,15 @@ class AsyncReactionsClient:
         """
         Restore liked/disliked UI state after a reload without writing or persisting reaction state in your own database. Your backend authenticates the user before supplying X-Author-User-Id. Returns only that user's existing reactions on APPROVED, non-deleted comments in the key's project and required resource; pending edits preserve existing public visibility. Optionally repeat commentId (maximum 100) to restrict to rendered comments. Ordered by reaction creation time descending, then reaction ID descending. limit defaults to 20 (1–100). Continue using nextCursor with the same project, author, resource and commentId filter set; null ends the list. Read-only, available in frozen projects, consumes no write permits; no separate read rate limiter is applied.
 
+        Required API-key permission: comments:read. A valid key without this permission is not sufficient; author identity and ownership requirements still apply where documented.
+
         Parameters
         ----------
         resource_id : str
-            Opaque identifier assigned by your backend to the resource being discussed, such as an article or product. Use the same value for its entire discussion. Required, non-empty, at most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is an identifier, not a resource URL.
+            Opaque identifier assigned by your backend to the resource being discussed, such as an article or product. Use the same value for its entire discussion. Required, 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. Slashes are accepted; URL-encode it in query parameters. This is an identifier, not a resource URL.
 
         author_user_id : str
-            Stable, non-empty external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. At most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+            Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
 
         comment_ids : typing.Optional[typing.Union[str, typing.Sequence[str]]]
             Optional rendered comment IDs. Repeat commentId in the query (not comma-separated); at most 100 values. Omit to read all of the author's public reactions in this resource. Comments without a reaction are absent.

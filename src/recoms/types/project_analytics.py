@@ -13,6 +13,10 @@ from .project_usage import ProjectUsage
 
 
 class ProjectAnalytics(UniversalBaseModel):
+    """
+    Operation result; inspect its fields as documented by this endpoint.
+    """
+
     analytics: DiscussionAnalytics
     moderation: ModerationAnalytics
     summary: ProjectCommentModerationSummary

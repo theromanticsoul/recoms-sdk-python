@@ -86,7 +86,10 @@ class ModerationAnalytics(UniversalBaseModel):
     Manual decisions with an automated outcome available for agreement comparison.
     """
 
-    outcomes: typing.List[ModerationAnalyticsOutcomesItem]
+    outcomes: typing.List[ModerationAnalyticsOutcomesItem] = pydantic.Field()
+    """
+    Automated revision checks grouped by calendar interval; configuration and draft-policy tests are excluded.
+    """
 
     if IS_PYDANTIC_V2:
         model_config: typing.ClassVar[pydantic.ConfigDict] = pydantic.ConfigDict(extra="allow", frozen=True)  # type: ignore # Pydantic v2

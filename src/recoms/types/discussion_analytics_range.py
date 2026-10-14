@@ -12,6 +12,10 @@ from .analytics_range_preset import AnalyticsRangePreset
 
 
 class DiscussionAnalyticsRange(UniversalBaseModel):
+    """
+    Resolved calendar range in UTC; endAt is exclusive and current-day ranges stop at the request time.
+    """
+
     start_at: typing_extensions.Annotated[
         dt.datetime,
         FieldMetadata(alias="startAt"),

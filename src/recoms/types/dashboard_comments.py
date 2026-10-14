@@ -11,7 +11,7 @@ from .dashboard_comments_queues import DashboardCommentsQueues
 
 
 class DashboardComments(UniversalBaseModel):
-    items: typing.List[DashboardCommentListRow] = pydantic.Field()
+    data: typing.List[DashboardCommentListRow] = pydantic.Field()
     """
     Matching comments in deterministic order; empty when no rows match.
     """

@@ -12,16 +12,15 @@ from ...core.parse_error import ParsingError
 from ...core.pydantic_utilities import parse_obj_as
 from ...core.request_options import RequestOptions
 from ...errors.bad_request_error import BadRequestError
-from ...errors.content_too_large_error import ContentTooLargeError
 from ...errors.forbidden_error import ForbiddenError
 from ...errors.internal_server_error import InternalServerError
-from ...errors.method_not_allowed_error import MethodNotAllowedError
 from ...errors.not_found_error import NotFoundError
 from ...errors.unauthorized_error import UnauthorizedError
+from ...types.authentication_required_error_response import AuthenticationRequiredErrorResponse
 from ...types.author_comment import AuthorComment
 from ...types.author_comment_list_response import AuthorCommentListResponse
 from ...types.author_comment_response import AuthorCommentResponse
-from ...types.error_response import ErrorResponse
+from ...types.internal_error_response import InternalErrorResponse
 from .types.list_comments_request_latest_revision_status_item import ListCommentsRequestLatestRevisionStatusItem
 from .types.list_comments_request_sort import ListCommentsRequestSort
 from pydantic import ValidationError
@@ -50,13 +49,15 @@ class RawCommentsClient:
         """
         Build a my-comments page or recover submissions whose IDs were lost, including comments awaiting review, without duplicating comment state in your database. Your backend authenticates the author supplied in X-Author-User-Id; the project key and author scope every result. Roots and replies are included, deleted comments are excluded. Optional resourceId narrows the resource; repeat latestRevisionStatus to match the latest submission only, including pending edits of already published comments. Returns the existing AuthorComment representation: published content plus latestRevision. NEWEST (default) orders comment creation time and ID descending; OLDEST orders both ascending. limit defaults to 20 (1–100). Copy nextCursor with unchanged project, author, filters and sort; null ends the list. Filter order is immaterial and limit may change; pagination is not a snapshot across requests. Read-only, available in frozen projects, consumes no write permits; no separate read rate limiter is applied.
 
+        Required API-key permission: comments:read. A valid key without this permission is not sufficient; author identity and ownership requirements still apply where documented.
+
         Parameters
         ----------
         author_user_id : str
-            Stable, non-empty external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. At most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+            Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
 
         resource_id : typing.Optional[str]
-            Optional opaque resource filter; omit to list across this project. May contain slashes. Maximum 512 UTF-8 bytes.
+            Optional opaque resource filter; omit to list across this project. May contain slashes. Accepts 1–512 Unicode code points.
 
         latest_revision_statuses : typing.Optional[typing.Union[ListCommentsRequestLatestRevisionStatusItem, typing.Sequence[ListCommentsRequestLatestRevisionStatusItem]]]
             Optional latest-submission states, passed as repeated query parameters. PENDING awaits review, FAILED needs review after technical failure, REJECTED was declined, APPROVED was published. Filters the latest revision only, so pending edits of approved comments are included. Omit to include every live submission state.
@@ -119,9 +120,9 @@ class RawCommentsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -130,9 +131,9 @@ class RawCommentsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -141,9 +142,9 @@ class RawCommentsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -163,13 +164,15 @@ class RawCommentsClient:
         """
         Read a comment owned by the externally authenticated user identified by X-Author-User-Id. Your backend must establish this identity; never trust an arbitrary client-supplied user ID. The response contains published content and the latest submitted revision, including PENDING, FAILED or REJECTED. A published comment can remain APPROVED while its edit awaits review. Deleted source is hidden in both content fields. This read does not consume write permits.
 
+        Required API-key permission: comments:read. A valid key without this permission is not sufficient; author identity and ownership requirements still apply where documented.
+
         Parameters
         ----------
         comment_id : str
             RECOMS-generated UUIDv7 identifying a comment in the authenticated project. Copy the identifier from a response; UUID input syntax is validated.
 
         author_user_id : str
-            Stable, non-empty external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. At most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+            Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -201,9 +204,9 @@ class RawCommentsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -212,9 +215,9 @@ class RawCommentsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -223,9 +226,9 @@ class RawCommentsClient:
                 raise ForbiddenError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -234,31 +237,9 @@ class RawCommentsClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
-                            object_=_response.json(),
-                        ),
-                    ),
-                )
-            if _response.status_code == 405:
-                raise MethodNotAllowedError(
-                    headers=dict(_response.headers),
-                    body=typing.cast(
-                        ErrorResponse,
-                        parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
-                            object_=_response.json(),
-                        ),
-                    ),
-                )
-            if _response.status_code == 413:
-                raise ContentTooLargeError(
-                    headers=dict(_response.headers),
-                    body=typing.cast(
-                        ErrorResponse,
-                        parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -267,9 +248,9 @@ class RawCommentsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -307,13 +288,15 @@ class AsyncRawCommentsClient:
         """
         Build a my-comments page or recover submissions whose IDs were lost, including comments awaiting review, without duplicating comment state in your database. Your backend authenticates the author supplied in X-Author-User-Id; the project key and author scope every result. Roots and replies are included, deleted comments are excluded. Optional resourceId narrows the resource; repeat latestRevisionStatus to match the latest submission only, including pending edits of already published comments. Returns the existing AuthorComment representation: published content plus latestRevision. NEWEST (default) orders comment creation time and ID descending; OLDEST orders both ascending. limit defaults to 20 (1–100). Copy nextCursor with unchanged project, author, filters and sort; null ends the list. Filter order is immaterial and limit may change; pagination is not a snapshot across requests. Read-only, available in frozen projects, consumes no write permits; no separate read rate limiter is applied.
 
+        Required API-key permission: comments:read. A valid key without this permission is not sufficient; author identity and ownership requirements still apply where documented.
+
         Parameters
         ----------
         author_user_id : str
-            Stable, non-empty external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. At most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+            Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
 
         resource_id : typing.Optional[str]
-            Optional opaque resource filter; omit to list across this project. May contain slashes. Maximum 512 UTF-8 bytes.
+            Optional opaque resource filter; omit to list across this project. May contain slashes. Accepts 1–512 Unicode code points.
 
         latest_revision_statuses : typing.Optional[typing.Union[ListCommentsRequestLatestRevisionStatusItem, typing.Sequence[ListCommentsRequestLatestRevisionStatusItem]]]
             Optional latest-submission states, passed as repeated query parameters. PENDING awaits review, FAILED needs review after technical failure, REJECTED was declined, APPROVED was published. Filters the latest revision only, so pending edits of approved comments are included. Omit to include every live submission state.
@@ -379,9 +362,9 @@ class AsyncRawCommentsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -390,9 +373,9 @@ class AsyncRawCommentsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -401,9 +384,9 @@ class AsyncRawCommentsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -423,13 +406,15 @@ class AsyncRawCommentsClient:
         """
         Read a comment owned by the externally authenticated user identified by X-Author-User-Id. Your backend must establish this identity; never trust an arbitrary client-supplied user ID. The response contains published content and the latest submitted revision, including PENDING, FAILED or REJECTED. A published comment can remain APPROVED while its edit awaits review. Deleted source is hidden in both content fields. This read does not consume write permits.
 
+        Required API-key permission: comments:read. A valid key without this permission is not sufficient; author identity and ownership requirements still apply where documented.
+
         Parameters
         ----------
         comment_id : str
             RECOMS-generated UUIDv7 identifying a comment in the authenticated project. Copy the identifier from a response; UUID input syntax is validated.
 
         author_user_id : str
-            Stable, non-empty external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. At most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+            Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -461,9 +446,9 @@ class AsyncRawCommentsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -472,9 +457,9 @@ class AsyncRawCommentsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -483,9 +468,9 @@ class AsyncRawCommentsClient:
                 raise ForbiddenError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -494,31 +479,9 @@ class AsyncRawCommentsClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
-                            object_=_response.json(),
-                        ),
-                    ),
-                )
-            if _response.status_code == 405:
-                raise MethodNotAllowedError(
-                    headers=dict(_response.headers),
-                    body=typing.cast(
-                        ErrorResponse,
-                        parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
-                            object_=_response.json(),
-                        ),
-                    ),
-                )
-            if _response.status_code == 413:
-                raise ContentTooLargeError(
-                    headers=dict(_response.headers),
-                    body=typing.cast(
-                        ErrorResponse,
-                        parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -527,9 +490,9 @@ class AsyncRawCommentsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),

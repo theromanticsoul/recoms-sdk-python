@@ -59,13 +59,28 @@ class DiscussionAnalytics(UniversalBaseModel):
     Threads with published replies in the range, or null when unavailable under current entitlements.
     """
 
-    range: DiscussionAnalyticsRange
-    series: typing.List[DiscussionAnalyticsSeriesItem]
+    range: DiscussionAnalyticsRange = pydantic.Field()
+    """
+    Resolved calendar range in UTC; endAt is exclusive and current-day ranges stop at the request time.
+    """
+
+    series: typing.List[DiscussionAnalyticsSeriesItem] = pydantic.Field()
+    """
+    Publication activity grouped by the selected calendar interval in the project timezone.
+    """
+
     top_resources: typing_extensions.Annotated[
         typing.List[DiscussionAnalyticsTopResourcesItem],
         FieldMetadata(alias="topResources"),
-        pydantic.Field(alias="topResources"),
+        pydantic.Field(
+            alias="topResources",
+            description="Resources ranked by first publications in the selected range, including replies. Empty when no resources have publications.",
+        ),
     ]
+    """
+    Resources ranked by first publications in the selected range, including replies. Empty when no resources have publications.
+    """
+
     top_authors: typing_extensions.Annotated[
         typing.List[DiscussionAnalyticsTopAuthorsItem],
         FieldMetadata(alias="topAuthors"),

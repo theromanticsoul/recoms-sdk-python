@@ -9,14 +9,12 @@ from ..core.http_response import AsyncHttpResponse, HttpResponse
 from ..core.parse_error import ParsingError
 from ..core.pydantic_utilities import parse_obj_as
 from ..core.request_options import RequestOptions
-from ..errors.bad_request_error import BadRequestError
-from ..errors.forbidden_error import ForbiddenError
 from ..errors.internal_server_error import InternalServerError
-from ..errors.not_found_error import NotFoundError
 from ..errors.unauthorized_error import UnauthorizedError
-from ..types.accessible_project import AccessibleProject
-from ..types.error_response import ErrorResponse
-from ..types.o_auth_availability import OAuthAvailability
+from ..types.authentication_required_error_response import AuthenticationRequiredErrorResponse
+from ..types.internal_error_response import InternalErrorResponse
+from .types.config_dashboard_response import ConfigDashboardResponse
+from .types.projects_dashboard_response import ProjectsDashboardResponse
 from pydantic import ValidationError
 
 
@@ -26,9 +24,9 @@ class RawDashboardClient:
 
     def projects(
         self, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> HttpResponse[typing.List[AccessibleProject]]:
+    ) -> HttpResponse[ProjectsDashboardResponse]:
         """
-        Dashboard bootstrap operation. Only the verified account's memberships are returned; project keys cannot enumerate accounts or projects.
+        List projects accessible to the authenticated RECOMS account, ordered by membership creation time. Project-only API keys do not grant account-wide access. Returns membership identity and role with each project; organizationId identifies the project, while id identifies the membership. Moderation rules are redacted to empty strings for roles other than owner/admin. Credentials are never returned. An account with no memberships receives an empty data array.
 
         Parameters
         ----------
@@ -37,7 +35,7 @@ class RawDashboardClient:
 
         Returns
         -------
-        HttpResponse[typing.List[AccessibleProject]]
+        HttpResponse[ProjectsDashboardResponse]
             Operation completed successfully.
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -48,53 +46,20 @@ class RawDashboardClient:
         try:
             if 200 <= _response.status_code < 300:
                 _data = typing.cast(
-                    typing.List[AccessibleProject],
+                    ProjectsDashboardResponse,
                     parse_obj_as(
-                        type_=typing.List[AccessibleProject],  # type: ignore
+                        type_=ProjectsDashboardResponse,  # type: ignore
                         object_=_response.json(),
                     ),
                 )
                 return HttpResponse(response=_response, data=_data)
-            if _response.status_code == 400:
-                raise BadRequestError(
-                    headers=dict(_response.headers),
-                    body=typing.cast(
-                        ErrorResponse,
-                        parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
-                            object_=_response.json(),
-                        ),
-                    ),
-                )
             if _response.status_code == 401:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
-                            object_=_response.json(),
-                        ),
-                    ),
-                )
-            if _response.status_code == 403:
-                raise ForbiddenError(
-                    headers=dict(_response.headers),
-                    body=typing.cast(
-                        ErrorResponse,
-                        parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
-                            object_=_response.json(),
-                        ),
-                    ),
-                )
-            if _response.status_code == 404:
-                raise NotFoundError(
-                    headers=dict(_response.headers),
-                    body=typing.cast(
-                        ErrorResponse,
-                        parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -103,9 +68,9 @@ class RawDashboardClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -119,9 +84,11 @@ class RawDashboardClient:
             )
         raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response_json)
 
-    def config(self, *, request_options: typing.Optional[RequestOptions] = None) -> HttpResponse[OAuthAvailability]:
+    def config(
+        self, *, request_options: typing.Optional[RequestOptions] = None
+    ) -> HttpResponse[ConfigDashboardResponse]:
         """
-        Returns only provider availability, with no client secrets or database information.
+        Read the availability of Google and GitHub sign-in for this deployment. This anonymous read returns only boolean availability, never provider credentials, account data or configuration secrets. It does not change state.
 
         Parameters
         ----------
@@ -130,7 +97,7 @@ class RawDashboardClient:
 
         Returns
         -------
-        HttpResponse[OAuthAvailability]
+        HttpResponse[ConfigDashboardResponse]
             Available authentication providers.
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -141,13 +108,24 @@ class RawDashboardClient:
         try:
             if 200 <= _response.status_code < 300:
                 _data = typing.cast(
-                    OAuthAvailability,
+                    ConfigDashboardResponse,
                     parse_obj_as(
-                        type_=OAuthAvailability,  # type: ignore
+                        type_=ConfigDashboardResponse,  # type: ignore
                         object_=_response.json(),
                     ),
                 )
                 return HttpResponse(response=_response, data=_data)
+            if _response.status_code == 500:
+                raise InternalServerError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        InternalErrorResponse,
+                        parse_obj_as(
+                            type_=InternalErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response.text)
@@ -164,9 +142,9 @@ class AsyncRawDashboardClient:
 
     async def projects(
         self, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> AsyncHttpResponse[typing.List[AccessibleProject]]:
+    ) -> AsyncHttpResponse[ProjectsDashboardResponse]:
         """
-        Dashboard bootstrap operation. Only the verified account's memberships are returned; project keys cannot enumerate accounts or projects.
+        List projects accessible to the authenticated RECOMS account, ordered by membership creation time. Project-only API keys do not grant account-wide access. Returns membership identity and role with each project; organizationId identifies the project, while id identifies the membership. Moderation rules are redacted to empty strings for roles other than owner/admin. Credentials are never returned. An account with no memberships receives an empty data array.
 
         Parameters
         ----------
@@ -175,7 +153,7 @@ class AsyncRawDashboardClient:
 
         Returns
         -------
-        AsyncHttpResponse[typing.List[AccessibleProject]]
+        AsyncHttpResponse[ProjectsDashboardResponse]
             Operation completed successfully.
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -186,53 +164,20 @@ class AsyncRawDashboardClient:
         try:
             if 200 <= _response.status_code < 300:
                 _data = typing.cast(
-                    typing.List[AccessibleProject],
+                    ProjectsDashboardResponse,
                     parse_obj_as(
-                        type_=typing.List[AccessibleProject],  # type: ignore
+                        type_=ProjectsDashboardResponse,  # type: ignore
                         object_=_response.json(),
                     ),
                 )
                 return AsyncHttpResponse(response=_response, data=_data)
-            if _response.status_code == 400:
-                raise BadRequestError(
-                    headers=dict(_response.headers),
-                    body=typing.cast(
-                        ErrorResponse,
-                        parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
-                            object_=_response.json(),
-                        ),
-                    ),
-                )
             if _response.status_code == 401:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
-                            object_=_response.json(),
-                        ),
-                    ),
-                )
-            if _response.status_code == 403:
-                raise ForbiddenError(
-                    headers=dict(_response.headers),
-                    body=typing.cast(
-                        ErrorResponse,
-                        parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
-                            object_=_response.json(),
-                        ),
-                    ),
-                )
-            if _response.status_code == 404:
-                raise NotFoundError(
-                    headers=dict(_response.headers),
-                    body=typing.cast(
-                        ErrorResponse,
-                        parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -241,9 +186,9 @@ class AsyncRawDashboardClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -259,9 +204,9 @@ class AsyncRawDashboardClient:
 
     async def config(
         self, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> AsyncHttpResponse[OAuthAvailability]:
+    ) -> AsyncHttpResponse[ConfigDashboardResponse]:
         """
-        Returns only provider availability, with no client secrets or database information.
+        Read the availability of Google and GitHub sign-in for this deployment. This anonymous read returns only boolean availability, never provider credentials, account data or configuration secrets. It does not change state.
 
         Parameters
         ----------
@@ -270,7 +215,7 @@ class AsyncRawDashboardClient:
 
         Returns
         -------
-        AsyncHttpResponse[OAuthAvailability]
+        AsyncHttpResponse[ConfigDashboardResponse]
             Available authentication providers.
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -281,13 +226,24 @@ class AsyncRawDashboardClient:
         try:
             if 200 <= _response.status_code < 300:
                 _data = typing.cast(
-                    OAuthAvailability,
+                    ConfigDashboardResponse,
                     parse_obj_as(
-                        type_=OAuthAvailability,  # type: ignore
+                        type_=ConfigDashboardResponse,  # type: ignore
                         object_=_response.json(),
                     ),
                 )
                 return AsyncHttpResponse(response=_response, data=_data)
+            if _response.status_code == 500:
+                raise InternalServerError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        InternalErrorResponse,
+                        parse_obj_as(
+                            type_=InternalErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response.text)

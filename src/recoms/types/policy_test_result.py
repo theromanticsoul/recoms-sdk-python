@@ -7,7 +7,6 @@ import typing
 import pydantic
 import typing_extensions
 from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
-from ..core.serialization import FieldMetadata
 
 
 class PolicyTestResult_Allowed(UniversalBaseModel):
@@ -45,27 +44,6 @@ class PolicyTestResult_Disallowed(UniversalBaseModel):
             extra = pydantic.Extra.allow
 
 
-class PolicyTestResult_Failed(UniversalBaseModel):
-    """
-    Ephemeral test outcome; no comment or policy changes are persisted by the test.
-    """
-
-    outcome: typing.Literal["FAILED"] = "FAILED"
-    failure_reason: typing_extensions.Annotated[
-        str, FieldMetadata(alias="failureReason"), pydantic.Field(alias="failureReason")
-    ]
-
-    if IS_PYDANTIC_V2:
-        model_config: typing.ClassVar[pydantic.ConfigDict] = pydantic.ConfigDict(extra="allow", frozen=True)  # type: ignore # Pydantic v2
-    else:
-
-        class Config:
-            frozen = True
-            smart_union = True
-            extra = pydantic.Extra.allow
-
-
 PolicyTestResult = typing_extensions.Annotated[
-    typing.Union[PolicyTestResult_Allowed, PolicyTestResult_Disallowed, PolicyTestResult_Failed],
-    pydantic.Field(discriminator="outcome"),
+    typing.Union[PolicyTestResult_Allowed, PolicyTestResult_Disallowed], pydantic.Field(discriminator="outcome")
 ]

@@ -39,13 +39,15 @@ class ReactionsClient:
         """
         Authenticate the end user in your backend and pass their external authorUserId. Only comments with approved public content accept reactions. Each user has at most one LIKE or DISLIKE per comment: setting the same type leaves it unchanged and setting the other replaces it. A pending edit does not disable reactions to existing public content. Frozen projects block new reaction activity. This mutation consumes write permits; optional Idempotency-Key provides replay for network retries. Send JSON; the maximum body is 16 KiB.
 
+        Required API-key permission: comments:write. A valid key without this permission is not sufficient; author identity and ownership requirements still apply where documented.
+
         Parameters
         ----------
         comment_id : str
             RECOMS-generated UUIDv7 identifying a comment in the authenticated project. Copy the identifier from a response; UUID input syntax is validated.
 
         author_user_id : str
-            Stable, non-empty external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. At most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+            Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
 
         type : SetReactionRequestType
             LIKE expresses a positive reaction; DISLIKE expresses a negative reaction. Each external user has at most one reaction per comment; setting the other type replaces it.
@@ -95,13 +97,15 @@ class ReactionsClient:
         """
         Remove the reaction belonging to the external user in X-Author-User-Id. Your backend authenticates this identity. No request body is required. If no reaction exists, return type null and unchanged counters. Deleted comments and comments without approved public content cannot be targeted. Removal remains available in frozen projects and consumes write permits. Use the original Idempotency-Key to retry an uncertain action; other users' reactions are unchanged.
 
+        Required API-key permission: comments:write. A valid key without this permission is not sufficient; author identity and ownership requirements still apply where documented.
+
         Parameters
         ----------
         comment_id : str
             RECOMS-generated UUIDv7 identifying a comment in the authenticated project. Copy the identifier from a response; UUID input syntax is validated.
 
         author_user_id : str
-            Stable, non-empty external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. At most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+            Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
 
         idempotency_key : typing.Optional[str]
             Optional client-generated UUID for one mutation. A successful committed result is replayed for 24 hours for the same project, author, method, path, key and request. Reusing the key with different input returns 409 IDEMPOTENCY_KEY_REUSED. Failed requests do not reserve the key. Preserve this key when retrying after an uncertain network outcome.
@@ -160,13 +164,15 @@ class AsyncReactionsClient:
         """
         Authenticate the end user in your backend and pass their external authorUserId. Only comments with approved public content accept reactions. Each user has at most one LIKE or DISLIKE per comment: setting the same type leaves it unchanged and setting the other replaces it. A pending edit does not disable reactions to existing public content. Frozen projects block new reaction activity. This mutation consumes write permits; optional Idempotency-Key provides replay for network retries. Send JSON; the maximum body is 16 KiB.
 
+        Required API-key permission: comments:write. A valid key without this permission is not sufficient; author identity and ownership requirements still apply where documented.
+
         Parameters
         ----------
         comment_id : str
             RECOMS-generated UUIDv7 identifying a comment in the authenticated project. Copy the identifier from a response; UUID input syntax is validated.
 
         author_user_id : str
-            Stable, non-empty external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. At most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+            Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
 
         type : SetReactionRequestType
             LIKE expresses a positive reaction; DISLIKE expresses a negative reaction. Each external user has at most one reaction per comment; setting the other type replaces it.
@@ -224,13 +230,15 @@ class AsyncReactionsClient:
         """
         Remove the reaction belonging to the external user in X-Author-User-Id. Your backend authenticates this identity. No request body is required. If no reaction exists, return type null and unchanged counters. Deleted comments and comments without approved public content cannot be targeted. Removal remains available in frozen projects and consumes write permits. Use the original Idempotency-Key to retry an uncertain action; other users' reactions are unchanged.
 
+        Required API-key permission: comments:write. A valid key without this permission is not sufficient; author identity and ownership requirements still apply where documented.
+
         Parameters
         ----------
         comment_id : str
             RECOMS-generated UUIDv7 identifying a comment in the authenticated project. Copy the identifier from a response; UUID input syntax is validated.
 
         author_user_id : str
-            Stable, non-empty external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. At most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+            Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
 
         idempotency_key : typing.Optional[str]
             Optional client-generated UUID for one mutation. A successful committed result is replayed for 24 hours for the same project, author, method, path, key and request. Reusing the key with different input returns 409 IDEMPOTENCY_KEY_REUSED. Failed requests do not reserve the key. Preserve this key when retrying after an uncertain network outcome.

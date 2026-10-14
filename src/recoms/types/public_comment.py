@@ -25,23 +25,23 @@ class PublicComment(UniversalBaseModel):
         FieldMetadata(alias="resourceId"),
         pydantic.Field(
             alias="resourceId",
-            description="Opaque identifier assigned by your backend to the resource being discussed, such as an article or product. Use the same value for its entire discussion. Required, non-empty, at most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is an identifier, not a resource URL.",
+            description="Opaque identifier assigned by your backend to the resource being discussed, such as an article or product. Use the same value for its entire discussion. Required, 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. Slashes are accepted; URL-encode it in query parameters. This is an identifier, not a resource URL.",
         ),
     ]
     """
-    Opaque identifier assigned by your backend to the resource being discussed, such as an article or product. Use the same value for its entire discussion. Required, non-empty, at most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is an identifier, not a resource URL.
+    Opaque identifier assigned by your backend to the resource being discussed, such as an article or product. Use the same value for its entire discussion. Required, 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. Slashes are accepted; URL-encode it in query parameters. This is an identifier, not a resource URL.
     """
 
-    user_id: typing_extensions.Annotated[
+    author_user_id: typing_extensions.Annotated[
         str,
-        FieldMetadata(alias="userId"),
+        FieldMetadata(alias="authorUserId"),
         pydantic.Field(
-            alias="userId",
-            description="Stable, non-empty external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. At most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.",
+            alias="authorUserId",
+            description="Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.",
         ),
     ]
     """
-    Stable, non-empty external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. At most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+    Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
     """
 
     parent_id: typing_extensions.Annotated[
@@ -67,7 +67,7 @@ class PublicComment(UniversalBaseModel):
 
     content: typing.Optional[str] = pydantic.Field(default=None)
     """
-    Currently published Markdown source, not the latest unapproved edit. Null for a deleted comment or an author-state comment with no published revision. Non-null content follows the Markdown input constraints.
+    Published Markdown source, or null for a deleted structural node. Pending edits are never returned by public reads.
     """
 
     status: PublicCommentStatus = pydantic.Field()

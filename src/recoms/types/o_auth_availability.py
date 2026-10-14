@@ -7,8 +7,19 @@ from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
 
 
 class OAuthAvailability(UniversalBaseModel):
-    google: bool
-    github: bool
+    """
+    Configured sign-in provider availability.
+    """
+
+    google: bool = pydantic.Field()
+    """
+    Whether Google sign-in is configured for this installation.
+    """
+
+    github: bool = pydantic.Field()
+    """
+    Whether GitHub sign-in is configured for this installation.
+    """
 
     if IS_PYDANTIC_V2:
         model_config: typing.ClassVar[pydantic.ConfigDict] = pydantic.ConfigDict(extra="allow", frozen=True)  # type: ignore # Pydantic v2

@@ -4,17 +4,17 @@ import typing
 
 import pydantic
 from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
-from .error_response_error import ErrorResponseError
+from .authorship_required_error_response_error import AuthorshipRequiredErrorResponseError
 
 
-class ErrorResponse(UniversalBaseModel):
+class AuthorshipRequiredErrorResponse(UniversalBaseModel):
     """
-    JSON error envelope. Inspect error.code and the operation's retry guidance; use X-Request-Id when reporting the problem.
+    Error envelope for the documented operation/status. Inspect error.code; message wording may change.
     """
 
-    error: ErrorResponseError = pydantic.Field()
+    error: AuthorshipRequiredErrorResponseError = pydantic.Field()
     """
-    Failure details: stable code plus a human-readable explanation.
+    Failure discriminated by code. VALIDATION_ERROR requires nonempty details; other codes contain only code and message.
     """
 
     if IS_PYDANTIC_V2:

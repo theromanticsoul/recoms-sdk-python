@@ -3,15 +3,12 @@
 import typing
 
 import pydantic
-import typing_extensions
-from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
-from ..core.serialization import FieldMetadata
+from ....core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
+from ....types.project_action_result import ProjectActionResult
 
 
-class FailedPolicyTest(UniversalBaseModel):
-    failure_reason: typing_extensions.Annotated[
-        str, FieldMetadata(alias="failureReason"), pydantic.Field(alias="failureReason")
-    ]
+class ConfigureProviderResponse(UniversalBaseModel):
+    data: ProjectActionResult
 
     if IS_PYDANTIC_V2:
         model_config: typing.ClassVar[pydantic.ConfigDict] = pydantic.ConfigDict(extra="allow", frozen=True)  # type: ignore # Pydantic v2

@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import typing
 
 from ..core.client_wrapper import AsyncClientWrapper, SyncClientWrapper
 from ..core.request_options import RequestOptions
 from ..types.analytics_range_preset import AnalyticsRangePreset
 from ..types.moderation_mode import ModerationMode
-from ..types.project_action_result import ProjectActionResult
-from ..types.project_analytics import ProjectAnalytics
-from ..types.project_context import ProjectContext
-from ..types.project_usage import ProjectUsage
 from .raw_client import AsyncRawProjectClient, RawProjectClient
+from .types.activate_project_response import ActivateProjectResponse
+from .types.analytics_project_response import AnalyticsProjectResponse
+from .types.freeze_project_response import FreezeProjectResponse
+from .types.get_project_response import GetProjectResponse
+from .types.transfer_ownership_project_response import TransferOwnershipProjectResponse
+from .types.update_project_response import UpdateProjectResponse
+from .types.usage_project_response import UsageProjectResponse
 
 if typing.TYPE_CHECKING:
     from .comments.client import AsyncCommentsClient, CommentsClient
@@ -41,23 +45,18 @@ class ProjectClient:
         """
         return self._raw_client
 
-    def get(
-        self, *, project_id: typing.Optional[str] = None, request_options: typing.Optional[RequestOptions] = None
-    ) -> ProjectContext:
+    def get(self, *, request_options: typing.Optional[RequestOptions] = None) -> GetProjectResponse:
         """
-        Read project settings and effective membership. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Read project settings, billing state and non-secret provider configuration. Requires project:read. The key selects the project and its configured permissions remain authoritative. Moderation rules and the recommended reset policy are included for management access. Available while frozen; no write permits are consumed.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectContext
+        GetProjectResponse
             Operation completed successfully.
 
         Examples
@@ -69,26 +68,22 @@ class ProjectClient:
         )
         client.project.get()
         """
-        _response = self._raw_client.get(project_id=project_id, request_options=request_options)
+        _response = self._raw_client.get(request_options=request_options)
         return _response.data
 
     def update(
         self,
         *,
-        project_id: typing.Optional[str] = None,
         moderation_mode: typing.Optional[ModerationMode] = OMIT,
         moderation_policy: typing.Optional[str] = OMIT,
         analytics_timezone: typing.Optional[str] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> ProjectActionResult:
+    ) -> UpdateProjectResponse:
         """
-        Update moderation settings or analytics timezone. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Atomically replace the supplied moderation mode, policy or analytics timezone. Requires project:update. Omitted fields remain unchanged; supply at least one. OFF publishes immediately, MANUAL queues review, AI resolves automatically, HYBRID queues suspected violations for review. Rules are trimmed. A timezone changes analytics calendar boundaries, not stored UTC timestamps. Existing decisions are not rerun. Refresh settings before retrying an uncertain outcome; Idempotency-Key replay is not supported. Available while frozen.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         moderation_mode : typing.Optional[ModerationMode]
 
         moderation_policy : typing.Optional[str]
@@ -102,7 +97,7 @@ class ProjectClient:
 
         Returns
         -------
-        ProjectActionResult
+        UpdateProjectResponse
             Operation completed successfully.
 
         Examples
@@ -112,10 +107,12 @@ class ProjectClient:
         client = RecomsClient(
             token="YOUR_TOKEN",
         )
-        client.project.update()
+        client.project.update(
+            moderation_mode="HYBRID",
+            analytics_timezone="Europe/Moscow",
+        )
         """
         _response = self._raw_client.update(
-            project_id=project_id,
             moderation_mode=moderation_mode,
             moderation_policy=moderation_policy,
             analytics_timezone=analytics_timezone,
@@ -127,32 +124,30 @@ class ProjectClient:
         self,
         *,
         preset: typing.Optional[AnalyticsRangePreset] = None,
-        custom_start_date: typing.Optional[str] = None,
-        custom_end_date: typing.Optional[str] = None,
-        project_id: typing.Optional[str] = None,
+        custom_start_date: typing.Optional[dt.date] = None,
+        custom_end_date: typing.Optional[dt.date] = None,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> ProjectAnalytics:
+    ) -> AnalyticsProjectResponse:
         """
-        Read discussion and moderation analytics for a period. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Read discussion and moderation metrics in the project's timezone. Requires analytics:read. Discussion counts first publication rather than edits; moderation summary counts unique comments with approval/rejection decisions. CUSTOM requires inclusive YYYY-MM-DD dates; the returned endAt is exclusive and current-day ranges stop at request time. Free history is limited to 90 days; unavailable segmentation metrics are null. planUsage follows the current billing period independently of the selected range. Available while frozen.
 
         Parameters
         ----------
         preset : typing.Optional[AnalyticsRangePreset]
             Calendar preset in the project's analytics timezone; CUSTOM requires both custom dates. Available history follows project entitlements.
 
-        custom_start_date : typing.Optional[str]
+        custom_start_date : typing.Optional[dt.date]
+            Inclusive calendar start date, YYYY-MM-DD, in the project's timezone; required for CUSTOM.
 
-        custom_end_date : typing.Optional[str]
-
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
+        custom_end_date : typing.Optional[dt.date]
+            Inclusive calendar end date, YYYY-MM-DD, in the project's timezone; required for CUSTOM. The response endAt is the next day's exclusive boundary, or the request time when the current date is selected. Dates must be ordered and not in the future.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectAnalytics
+        AnalyticsProjectResponse
             Operation completed successfully.
 
         Examples
@@ -168,28 +163,22 @@ class ProjectClient:
             preset=preset,
             custom_start_date=custom_start_date,
             custom_end_date=custom_end_date,
-            project_id=project_id,
             request_options=request_options,
         )
         return _response.data
 
-    def usage(
-        self, *, project_id: typing.Optional[str] = None, request_options: typing.Optional[RequestOptions] = None
-    ) -> typing.Optional[ProjectUsage]:
+    def usage(self, *, request_options: typing.Optional[RequestOptions] = None) -> UsageProjectResponse:
         """
-        Read project submission usage for the current billing period. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Read submission usage and allowance for the current project billing period. Requires usage:read. Edits count as submissions; freeze/activation does not reset usage. Returns null without billing state. With billing state but no current usage interval, consumed is zero, included follows the plan and period is null. This read never reserves quota and is available while frozen.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        typing.Optional[ProjectUsage]
+        UsageProjectResponse
             Operation completed successfully.
 
         Examples
@@ -201,26 +190,21 @@ class ProjectClient:
         )
         client.project.usage()
         """
-        _response = self._raw_client.usage(project_id=project_id, request_options=request_options)
+        _response = self._raw_client.usage(request_options=request_options)
         return _response.data
 
-    def freeze(
-        self, *, project_id: typing.Optional[str] = None, request_options: typing.Optional[RequestOptions] = None
-    ) -> ProjectActionResult:
+    def freeze(self, *, request_options: typing.Optional[RequestOptions] = None) -> FreezeProjectResponse:
         """
-        freezeProject. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Freeze an ACTIVE Free project and release its owner's active Free slot. Requires verified owner access; project-only API keys do not grant this authority. Comments, revisions, reactions and memberships are retained. Reads and removals remain available; new submissions, edits and reaction additions are blocked. Usage is not reset. Activation can restore access subject to Free allocation and membership requirements. Repeating after success returns PROJECT_STATE_CONFLICT; refresh before retrying an uncertain result. Send an empty JSON object.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectActionResult
+        FreezeProjectResponse
             Operation completed successfully.
 
         Examples
@@ -232,36 +216,33 @@ class ProjectClient:
         )
         client.project.freeze()
         """
-        _response = self._raw_client.freeze(project_id=project_id, request_options=request_options)
+        _response = self._raw_client.freeze(request_options=request_options)
         return _response.data
 
     def activate(
         self,
         *,
-        project_id: typing.Optional[str] = None,
         freeze_project_id: typing.Optional[str] = OMIT,
         confirm_member_removal: typing.Optional[bool] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> ProjectActionResult:
+    ) -> ActivateProjectResponse:
         """
-        activateProject. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Activate a FROZEN Free project. Requires verified owner access; project-only API keys do not grant this authority. At most two owned Free projects may be ACTIVE. If both slots are occupied, supply another owned ACTIVE Free project's freezeProjectId. Non-owner memberships require confirmMemberRemoval=true and are removed before activation; pending invitations are canceled. Free allocation changes are atomic, but membership removal can precede a failed activation: ACTIVATION_PARTIALLY_COMPLETED requires refreshing billing and members before another attempt. Existing comments and usage are retained. Idempotency-Key replay is not supported.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         freeze_project_id : typing.Optional[str]
-            RECOMS identifier generated by the service.
+            Another ACTIVE Free project owned by the authenticated owner to freeze when both Free slots are occupied. Omit when a slot is available; this cannot be the project being activated.
 
         confirm_member_removal : typing.Optional[bool]
+            Explicit consent to remove every non-owner membership before Free activation. Required when participants exist; pending invitations are canceled during activation even without participants.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectActionResult
+        ActivateProjectResponse
             Operation completed successfully.
 
         Examples
@@ -271,10 +252,11 @@ class ProjectClient:
         client = RecomsClient(
             token="YOUR_TOKEN",
         )
-        client.project.activate()
+        client.project.activate(
+            confirm_member_removal=False,
+        )
         """
         _response = self._raw_client.activate(
-            project_id=project_id,
             freeze_project_id=freeze_project_id,
             confirm_member_removal=confirm_member_removal,
             request_options=request_options,
@@ -282,29 +264,22 @@ class ProjectClient:
         return _response.data
 
     def transfer_ownership(
-        self,
-        *,
-        target_user_id: str,
-        project_id: typing.Optional[str] = None,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> ProjectActionResult:
+        self, *, target_user_id: str, request_options: typing.Optional[RequestOptions] = None
+    ) -> TransferOwnershipProjectResponse:
         """
-        transferProjectOwnership. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Transfer the project to another existing member. Requires verified owner access; project-only API keys do not grant this authority. targetUserId identifies the target RECOMS account, not an external comment author or membership. The target becomes the sole owner and the previous owner becomes admin atomically. Existing project data remains. Obtain explicit consent before changing ownership. Missing target membership returns VALIDATION_ERROR; changed ownership returns FORBIDDEN. Refresh membership after an uncertain outcome instead of automatically retrying.
 
         Parameters
         ----------
         target_user_id : str
-            RECOMS identifier generated by the service.
-
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
+            RECOMS account ID of another existing project member, not a membership ID or external comment author ID. The current owner becomes admin.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectActionResult
+        TransferOwnershipProjectResponse
             Operation completed successfully.
 
         Examples
@@ -315,12 +290,10 @@ class ProjectClient:
             token="YOUR_TOKEN",
         )
         client.project.transfer_ownership(
-            target_user_id="targetUserId",
+            target_user_id="0198a6ec-9e00-7000-8000-000000000002",
         )
         """
-        _response = self._raw_client.transfer_ownership(
-            target_user_id=target_user_id, project_id=project_id, request_options=request_options
-        )
+        _response = self._raw_client.transfer_ownership(target_user_id=target_user_id, request_options=request_options)
         return _response.data
 
     @property
@@ -367,23 +340,18 @@ class AsyncProjectClient:
         """
         return self._raw_client
 
-    async def get(
-        self, *, project_id: typing.Optional[str] = None, request_options: typing.Optional[RequestOptions] = None
-    ) -> ProjectContext:
+    async def get(self, *, request_options: typing.Optional[RequestOptions] = None) -> GetProjectResponse:
         """
-        Read project settings and effective membership. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Read project settings, billing state and non-secret provider configuration. Requires project:read. The key selects the project and its configured permissions remain authoritative. Moderation rules and the recommended reset policy are included for management access. Available while frozen; no write permits are consumed.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectContext
+        GetProjectResponse
             Operation completed successfully.
 
         Examples
@@ -403,26 +371,22 @@ class AsyncProjectClient:
 
         asyncio.run(main())
         """
-        _response = await self._raw_client.get(project_id=project_id, request_options=request_options)
+        _response = await self._raw_client.get(request_options=request_options)
         return _response.data
 
     async def update(
         self,
         *,
-        project_id: typing.Optional[str] = None,
         moderation_mode: typing.Optional[ModerationMode] = OMIT,
         moderation_policy: typing.Optional[str] = OMIT,
         analytics_timezone: typing.Optional[str] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> ProjectActionResult:
+    ) -> UpdateProjectResponse:
         """
-        Update moderation settings or analytics timezone. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Atomically replace the supplied moderation mode, policy or analytics timezone. Requires project:update. Omitted fields remain unchanged; supply at least one. OFF publishes immediately, MANUAL queues review, AI resolves automatically, HYBRID queues suspected violations for review. Rules are trimmed. A timezone changes analytics calendar boundaries, not stored UTC timestamps. Existing decisions are not rerun. Refresh settings before retrying an uncertain outcome; Idempotency-Key replay is not supported. Available while frozen.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         moderation_mode : typing.Optional[ModerationMode]
 
         moderation_policy : typing.Optional[str]
@@ -436,7 +400,7 @@ class AsyncProjectClient:
 
         Returns
         -------
-        ProjectActionResult
+        UpdateProjectResponse
             Operation completed successfully.
 
         Examples
@@ -451,13 +415,15 @@ class AsyncProjectClient:
 
 
         async def main() -> None:
-            await client.project.update()
+            await client.project.update(
+                moderation_mode="HYBRID",
+                analytics_timezone="Europe/Moscow",
+            )
 
 
         asyncio.run(main())
         """
         _response = await self._raw_client.update(
-            project_id=project_id,
             moderation_mode=moderation_mode,
             moderation_policy=moderation_policy,
             analytics_timezone=analytics_timezone,
@@ -469,32 +435,30 @@ class AsyncProjectClient:
         self,
         *,
         preset: typing.Optional[AnalyticsRangePreset] = None,
-        custom_start_date: typing.Optional[str] = None,
-        custom_end_date: typing.Optional[str] = None,
-        project_id: typing.Optional[str] = None,
+        custom_start_date: typing.Optional[dt.date] = None,
+        custom_end_date: typing.Optional[dt.date] = None,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> ProjectAnalytics:
+    ) -> AnalyticsProjectResponse:
         """
-        Read discussion and moderation analytics for a period. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Read discussion and moderation metrics in the project's timezone. Requires analytics:read. Discussion counts first publication rather than edits; moderation summary counts unique comments with approval/rejection decisions. CUSTOM requires inclusive YYYY-MM-DD dates; the returned endAt is exclusive and current-day ranges stop at request time. Free history is limited to 90 days; unavailable segmentation metrics are null. planUsage follows the current billing period independently of the selected range. Available while frozen.
 
         Parameters
         ----------
         preset : typing.Optional[AnalyticsRangePreset]
             Calendar preset in the project's analytics timezone; CUSTOM requires both custom dates. Available history follows project entitlements.
 
-        custom_start_date : typing.Optional[str]
+        custom_start_date : typing.Optional[dt.date]
+            Inclusive calendar start date, YYYY-MM-DD, in the project's timezone; required for CUSTOM.
 
-        custom_end_date : typing.Optional[str]
-
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
+        custom_end_date : typing.Optional[dt.date]
+            Inclusive calendar end date, YYYY-MM-DD, in the project's timezone; required for CUSTOM. The response endAt is the next day's exclusive boundary, or the request time when the current date is selected. Dates must be ordered and not in the future.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectAnalytics
+        AnalyticsProjectResponse
             Operation completed successfully.
 
         Examples
@@ -518,28 +482,22 @@ class AsyncProjectClient:
             preset=preset,
             custom_start_date=custom_start_date,
             custom_end_date=custom_end_date,
-            project_id=project_id,
             request_options=request_options,
         )
         return _response.data
 
-    async def usage(
-        self, *, project_id: typing.Optional[str] = None, request_options: typing.Optional[RequestOptions] = None
-    ) -> typing.Optional[ProjectUsage]:
+    async def usage(self, *, request_options: typing.Optional[RequestOptions] = None) -> UsageProjectResponse:
         """
-        Read project submission usage for the current billing period. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Read submission usage and allowance for the current project billing period. Requires usage:read. Edits count as submissions; freeze/activation does not reset usage. Returns null without billing state. With billing state but no current usage interval, consumed is zero, included follows the plan and period is null. This read never reserves quota and is available while frozen.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        typing.Optional[ProjectUsage]
+        UsageProjectResponse
             Operation completed successfully.
 
         Examples
@@ -559,26 +517,21 @@ class AsyncProjectClient:
 
         asyncio.run(main())
         """
-        _response = await self._raw_client.usage(project_id=project_id, request_options=request_options)
+        _response = await self._raw_client.usage(request_options=request_options)
         return _response.data
 
-    async def freeze(
-        self, *, project_id: typing.Optional[str] = None, request_options: typing.Optional[RequestOptions] = None
-    ) -> ProjectActionResult:
+    async def freeze(self, *, request_options: typing.Optional[RequestOptions] = None) -> FreezeProjectResponse:
         """
-        freezeProject. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Freeze an ACTIVE Free project and release its owner's active Free slot. Requires verified owner access; project-only API keys do not grant this authority. Comments, revisions, reactions and memberships are retained. Reads and removals remain available; new submissions, edits and reaction additions are blocked. Usage is not reset. Activation can restore access subject to Free allocation and membership requirements. Repeating after success returns PROJECT_STATE_CONFLICT; refresh before retrying an uncertain result. Send an empty JSON object.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectActionResult
+        FreezeProjectResponse
             Operation completed successfully.
 
         Examples
@@ -598,36 +551,33 @@ class AsyncProjectClient:
 
         asyncio.run(main())
         """
-        _response = await self._raw_client.freeze(project_id=project_id, request_options=request_options)
+        _response = await self._raw_client.freeze(request_options=request_options)
         return _response.data
 
     async def activate(
         self,
         *,
-        project_id: typing.Optional[str] = None,
         freeze_project_id: typing.Optional[str] = OMIT,
         confirm_member_removal: typing.Optional[bool] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> ProjectActionResult:
+    ) -> ActivateProjectResponse:
         """
-        activateProject. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Activate a FROZEN Free project. Requires verified owner access; project-only API keys do not grant this authority. At most two owned Free projects may be ACTIVE. If both slots are occupied, supply another owned ACTIVE Free project's freezeProjectId. Non-owner memberships require confirmMemberRemoval=true and are removed before activation; pending invitations are canceled. Free allocation changes are atomic, but membership removal can precede a failed activation: ACTIVATION_PARTIALLY_COMPLETED requires refreshing billing and members before another attempt. Existing comments and usage are retained. Idempotency-Key replay is not supported.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         freeze_project_id : typing.Optional[str]
-            RECOMS identifier generated by the service.
+            Another ACTIVE Free project owned by the authenticated owner to freeze when both Free slots are occupied. Omit when a slot is available; this cannot be the project being activated.
 
         confirm_member_removal : typing.Optional[bool]
+            Explicit consent to remove every non-owner membership before Free activation. Required when participants exist; pending invitations are canceled during activation even without participants.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectActionResult
+        ActivateProjectResponse
             Operation completed successfully.
 
         Examples
@@ -642,13 +592,14 @@ class AsyncProjectClient:
 
 
         async def main() -> None:
-            await client.project.activate()
+            await client.project.activate(
+                confirm_member_removal=False,
+            )
 
 
         asyncio.run(main())
         """
         _response = await self._raw_client.activate(
-            project_id=project_id,
             freeze_project_id=freeze_project_id,
             confirm_member_removal=confirm_member_removal,
             request_options=request_options,
@@ -656,29 +607,22 @@ class AsyncProjectClient:
         return _response.data
 
     async def transfer_ownership(
-        self,
-        *,
-        target_user_id: str,
-        project_id: typing.Optional[str] = None,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> ProjectActionResult:
+        self, *, target_user_id: str, request_options: typing.Optional[RequestOptions] = None
+    ) -> TransferOwnershipProjectResponse:
         """
-        transferProjectOwnership. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Transfer the project to another existing member. Requires verified owner access; project-only API keys do not grant this authority. targetUserId identifies the target RECOMS account, not an external comment author or membership. The target becomes the sole owner and the previous owner becomes admin atomically. Existing project data remains. Obtain explicit consent before changing ownership. Missing target membership returns VALIDATION_ERROR; changed ownership returns FORBIDDEN. Refresh membership after an uncertain outcome instead of automatically retrying.
 
         Parameters
         ----------
         target_user_id : str
-            RECOMS identifier generated by the service.
-
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
+            RECOMS account ID of another existing project member, not a membership ID or external comment author ID. The current owner becomes admin.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectActionResult
+        TransferOwnershipProjectResponse
             Operation completed successfully.
 
         Examples
@@ -694,14 +638,14 @@ class AsyncProjectClient:
 
         async def main() -> None:
             await client.project.transfer_ownership(
-                target_user_id="targetUserId",
+                target_user_id="0198a6ec-9e00-7000-8000-000000000002",
             )
 
 
         asyncio.run(main())
         """
         _response = await self._raw_client.transfer_ownership(
-            target_user_id=target_user_id, project_id=project_id, request_options=request_options
+            target_user_id=target_user_id, request_options=request_options
         )
         return _response.data
 

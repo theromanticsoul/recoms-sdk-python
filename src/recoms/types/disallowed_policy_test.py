@@ -7,7 +7,10 @@ from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
 
 
 class DisallowedPolicyTest(UniversalBaseModel):
-    reason: str
+    reason: str = pydantic.Field()
+    """
+    Human-readable explanation of the example's policy violation, not chain-of-thought.
+    """
 
     if IS_PYDANTIC_V2:
         model_config: typing.ClassVar[pydantic.ConfigDict] = pydantic.ConfigDict(extra="allow", frozen=True)  # type: ignore # Pydantic v2

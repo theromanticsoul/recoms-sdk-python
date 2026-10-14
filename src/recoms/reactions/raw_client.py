@@ -21,8 +21,13 @@ from ..errors.payment_required_error import PaymentRequiredError
 from ..errors.too_many_requests_error import TooManyRequestsError
 from ..errors.unauthorized_error import UnauthorizedError
 from ..errors.unprocessable_entity_error import UnprocessableEntityError
-from ..types.error_response import ErrorResponse
+from ..types.authentication_required_error_response import AuthenticationRequiredErrorResponse
+from ..types.comment_not_published_error_response import CommentNotPublishedErrorResponse
+from ..types.internal_error_response import InternalErrorResponse
+from ..types.method_not_allowed_error_response import MethodNotAllowedErrorResponse
+from ..types.rate_limited_error_response import RateLimitedErrorResponse
 from ..types.reaction_response import ReactionResponse
+from ..types.request_body_too_large_error_response import RequestBodyTooLargeErrorResponse
 from .types.set_reaction_request_type import SetReactionRequestType
 from pydantic import ValidationError
 
@@ -46,13 +51,15 @@ class RawReactionsClient:
         """
         Authenticate the end user in your backend and pass their external authorUserId. Only comments with approved public content accept reactions. Each user has at most one LIKE or DISLIKE per comment: setting the same type leaves it unchanged and setting the other replaces it. A pending edit does not disable reactions to existing public content. Frozen projects block new reaction activity. This mutation consumes write permits; optional Idempotency-Key provides replay for network retries. Send JSON; the maximum body is 16 KiB.
 
+        Required API-key permission: comments:write. A valid key without this permission is not sufficient; author identity and ownership requirements still apply where documented.
+
         Parameters
         ----------
         comment_id : str
             RECOMS-generated UUIDv7 identifying a comment in the authenticated project. Copy the identifier from a response; UUID input syntax is validated.
 
         author_user_id : str
-            Stable, non-empty external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. At most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+            Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
 
         type : SetReactionRequestType
             LIKE expresses a positive reaction; DISLIKE expresses a negative reaction. Each external user has at most one reaction per comment; setting the other type replaces it.
@@ -96,9 +103,9 @@ class RawReactionsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -107,9 +114,9 @@ class RawReactionsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -118,9 +125,9 @@ class RawReactionsClient:
                 raise PaymentRequiredError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -129,9 +136,9 @@ class RawReactionsClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -140,9 +147,9 @@ class RawReactionsClient:
                 raise MethodNotAllowedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        MethodNotAllowedErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=MethodNotAllowedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -151,9 +158,9 @@ class RawReactionsClient:
                 raise ConflictError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -162,9 +169,9 @@ class RawReactionsClient:
                 raise ContentTooLargeError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        RequestBodyTooLargeErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -173,9 +180,9 @@ class RawReactionsClient:
                 raise UnprocessableEntityError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        CommentNotPublishedErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=CommentNotPublishedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -184,9 +191,9 @@ class RawReactionsClient:
                 raise TooManyRequestsError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        RateLimitedErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=RateLimitedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -195,9 +202,9 @@ class RawReactionsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -222,13 +229,15 @@ class RawReactionsClient:
         """
         Remove the reaction belonging to the external user in X-Author-User-Id. Your backend authenticates this identity. No request body is required. If no reaction exists, return type null and unchanged counters. Deleted comments and comments without approved public content cannot be targeted. Removal remains available in frozen projects and consumes write permits. Use the original Idempotency-Key to retry an uncertain action; other users' reactions are unchanged.
 
+        Required API-key permission: comments:write. A valid key without this permission is not sufficient; author identity and ownership requirements still apply where documented.
+
         Parameters
         ----------
         comment_id : str
             RECOMS-generated UUIDv7 identifying a comment in the authenticated project. Copy the identifier from a response; UUID input syntax is validated.
 
         author_user_id : str
-            Stable, non-empty external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. At most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+            Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
 
         idempotency_key : typing.Optional[str]
             Optional client-generated UUID for one mutation. A successful committed result is replayed for 24 hours for the same project, author, method, path, key and request. Reusing the key with different input returns 409 IDEMPOTENCY_KEY_REUSED. Failed requests do not reserve the key. Preserve this key when retrying after an uncertain network outcome.
@@ -264,9 +273,9 @@ class RawReactionsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -275,9 +284,9 @@ class RawReactionsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -286,9 +295,9 @@ class RawReactionsClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -297,9 +306,9 @@ class RawReactionsClient:
                 raise MethodNotAllowedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        MethodNotAllowedErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=MethodNotAllowedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -308,9 +317,9 @@ class RawReactionsClient:
                 raise ConflictError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -319,9 +328,9 @@ class RawReactionsClient:
                 raise ContentTooLargeError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        RequestBodyTooLargeErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -330,9 +339,9 @@ class RawReactionsClient:
                 raise UnprocessableEntityError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        CommentNotPublishedErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=CommentNotPublishedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -341,9 +350,9 @@ class RawReactionsClient:
                 raise TooManyRequestsError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        RateLimitedErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=RateLimitedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -352,9 +361,9 @@ class RawReactionsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -385,13 +394,15 @@ class AsyncRawReactionsClient:
         """
         Authenticate the end user in your backend and pass their external authorUserId. Only comments with approved public content accept reactions. Each user has at most one LIKE or DISLIKE per comment: setting the same type leaves it unchanged and setting the other replaces it. A pending edit does not disable reactions to existing public content. Frozen projects block new reaction activity. This mutation consumes write permits; optional Idempotency-Key provides replay for network retries. Send JSON; the maximum body is 16 KiB.
 
+        Required API-key permission: comments:write. A valid key without this permission is not sufficient; author identity and ownership requirements still apply where documented.
+
         Parameters
         ----------
         comment_id : str
             RECOMS-generated UUIDv7 identifying a comment in the authenticated project. Copy the identifier from a response; UUID input syntax is validated.
 
         author_user_id : str
-            Stable, non-empty external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. At most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+            Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
 
         type : SetReactionRequestType
             LIKE expresses a positive reaction; DISLIKE expresses a negative reaction. Each external user has at most one reaction per comment; setting the other type replaces it.
@@ -435,9 +446,9 @@ class AsyncRawReactionsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -446,9 +457,9 @@ class AsyncRawReactionsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -457,9 +468,9 @@ class AsyncRawReactionsClient:
                 raise PaymentRequiredError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -468,9 +479,9 @@ class AsyncRawReactionsClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -479,9 +490,9 @@ class AsyncRawReactionsClient:
                 raise MethodNotAllowedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        MethodNotAllowedErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=MethodNotAllowedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -490,9 +501,9 @@ class AsyncRawReactionsClient:
                 raise ConflictError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -501,9 +512,9 @@ class AsyncRawReactionsClient:
                 raise ContentTooLargeError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        RequestBodyTooLargeErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -512,9 +523,9 @@ class AsyncRawReactionsClient:
                 raise UnprocessableEntityError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        CommentNotPublishedErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=CommentNotPublishedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -523,9 +534,9 @@ class AsyncRawReactionsClient:
                 raise TooManyRequestsError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        RateLimitedErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=RateLimitedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -534,9 +545,9 @@ class AsyncRawReactionsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -561,13 +572,15 @@ class AsyncRawReactionsClient:
         """
         Remove the reaction belonging to the external user in X-Author-User-Id. Your backend authenticates this identity. No request body is required. If no reaction exists, return type null and unchanged counters. Deleted comments and comments without approved public content cannot be targeted. Removal remains available in frozen projects and consumes write permits. Use the original Idempotency-Key to retry an uncertain action; other users' reactions are unchanged.
 
+        Required API-key permission: comments:write. A valid key without this permission is not sufficient; author identity and ownership requirements still apply where documented.
+
         Parameters
         ----------
         comment_id : str
             RECOMS-generated UUIDv7 identifying a comment in the authenticated project. Copy the identifier from a response; UUID input syntax is validated.
 
         author_user_id : str
-            Stable, non-empty external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. At most 512 UTF-8 bytes; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+            Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
 
         idempotency_key : typing.Optional[str]
             Optional client-generated UUID for one mutation. A successful committed result is replayed for 24 hours for the same project, author, method, path, key and request. Reusing the key with different input returns 409 IDEMPOTENCY_KEY_REUSED. Failed requests do not reserve the key. Preserve this key when retrying after an uncertain network outcome.
@@ -603,9 +616,9 @@ class AsyncRawReactionsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -614,9 +627,9 @@ class AsyncRawReactionsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -625,9 +638,9 @@ class AsyncRawReactionsClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -636,9 +649,9 @@ class AsyncRawReactionsClient:
                 raise MethodNotAllowedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        MethodNotAllowedErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=MethodNotAllowedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -647,9 +660,9 @@ class AsyncRawReactionsClient:
                 raise ConflictError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -658,9 +671,9 @@ class AsyncRawReactionsClient:
                 raise ContentTooLargeError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        RequestBodyTooLargeErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -669,9 +682,9 @@ class AsyncRawReactionsClient:
                 raise UnprocessableEntityError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        CommentNotPublishedErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=CommentNotPublishedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -680,9 +693,9 @@ class AsyncRawReactionsClient:
                 raise TooManyRequestsError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        RateLimitedErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=RateLimitedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -691,9 +704,9 @@ class AsyncRawReactionsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),

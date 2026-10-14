@@ -7,6 +7,10 @@ from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
 
 
 class ProjectReviewQueues(UniversalBaseModel):
+    """
+    Operation result; inspect its fields as documented by this endpoint.
+    """
+
     pending: int = pydantic.Field()
     """
     Latest revisions waiting for manual review; zero for roles without moderation access.

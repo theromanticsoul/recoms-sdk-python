@@ -13,17 +13,20 @@ from ...core.pydantic_utilities import parse_obj_as
 from ...core.request_options import RequestOptions
 from ...errors.bad_request_error import BadRequestError
 from ...errors.conflict_error import ConflictError
+from ...errors.content_too_large_error import ContentTooLargeError
 from ...errors.forbidden_error import ForbiddenError
 from ...errors.internal_server_error import InternalServerError
 from ...errors.not_found_error import NotFoundError
 from ...errors.unauthorized_error import UnauthorizedError
+from ...types.authentication_required_error_response import AuthenticationRequiredErrorResponse
 from ...types.dashboard_comment_sort import DashboardCommentSort
 from ...types.dashboard_comment_status import DashboardCommentStatus
 from ...types.dashboard_comments import DashboardComments
-from ...types.error_response import ErrorResponse
-from ...types.project_action_result import ProjectActionResult
-from ...types.project_review_queues import ProjectReviewQueues
+from ...types.internal_error_response import InternalErrorResponse
+from ...types.request_body_too_large_error_response import RequestBodyTooLargeErrorResponse
+from .types.queues_comments_response import QueuesCommentsResponse
 from .types.review_comment_decision import ReviewCommentDecision
+from .types.review_comments_response import ReviewCommentsResponse
 from pydantic import ValidationError
 
 # this is used as the default value for optional parameters
@@ -35,38 +38,32 @@ class RawCommentsClient:
         self._client_wrapper = client_wrapper
 
     def queues(
-        self, *, project_id: typing.Optional[str] = None, request_options: typing.Optional[RequestOptions] = None
-    ) -> HttpResponse[ProjectReviewQueues]:
+        self, *, request_options: typing.Optional[RequestOptions] = None
+    ) -> HttpResponse[QueuesCommentsResponse]:
         """
-        Read the number of revisions awaiting review. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Count the latest PENDING and FAILED revisions of live comments, including pending edits of already published comments. Requires comments:read. Deleted comments are excluded. FAILED is a technical check failure, not rejection. These counts and a separate list are not a shared snapshot. Available while frozen.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        HttpResponse[ProjectReviewQueues]
+        HttpResponse[QueuesCommentsResponse]
             Operation completed successfully.
         """
         _response = self._client_wrapper.httpx_client.request(
             "v1/project/review-queues",
             method="GET",
-            headers={
-                "x-project-id": str(project_id) if project_id is not None else None,
-            },
             request_options=request_options,
         )
         try:
             if 200 <= _response.status_code < 300:
                 _data = typing.cast(
-                    ProjectReviewQueues,
+                    QueuesCommentsResponse,
                     parse_obj_as(
-                        type_=ProjectReviewQueues,  # type: ignore
+                        type_=QueuesCommentsResponse,  # type: ignore
                         object_=_response.json(),
                     ),
                 )
@@ -75,9 +72,9 @@ class RawCommentsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -86,9 +83,9 @@ class RawCommentsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -97,9 +94,9 @@ class RawCommentsClient:
                 raise ForbiddenError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -108,9 +105,9 @@ class RawCommentsClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -119,9 +116,9 @@ class RawCommentsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -143,15 +140,15 @@ class RawCommentsClient:
         sort: typing.Optional[DashboardCommentSort] = None,
         limit: typing.Optional[int] = None,
         cursor: typing.Optional[str] = None,
-        project_id: typing.Optional[str] = None,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> HttpResponse[DashboardComments]:
         """
-        List comments including moderation state. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        List roots and replies with their latest moderation revision. Requires comments:read. Filter status follows the latest revision, so an approved comment with a pending edit appears under PENDING. Creation time or current reaction/reply counts determine order; ID breaks ties. Continue with nextCursor and identical filters/sort; null ends pagination. Pages are not a snapshot. hasComments ignores filters; queues describes moderation backlog. Available while frozen; no write permits are consumed.
 
         Parameters
         ----------
         search : typing.Optional[str]
+            Text search in comment content; at most 512 Unicode code points. Omit or use an empty string for no text filter.
 
         status : typing.Optional[DashboardCommentStatus]
             Filter by latest revision decision or deleted node. ALL and unpublished states require moderation access.
@@ -160,11 +157,10 @@ class RawCommentsClient:
             Creation time descending or ascending, total reactions descending, or published direct reply count descending; identifier breaks ties.
 
         limit : typing.Optional[int]
+            Maximum rows in this page, inclusive range 1–100.
 
         cursor : typing.Optional[str]
-
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
+            Opaque nextCursor from the preceding page. Keep filters and sort unchanged; incompatible tokens return INVALID_CURSOR. Omit to restart. Pagination is not a snapshot.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -184,9 +180,6 @@ class RawCommentsClient:
                 "limit": limit,
                 "cursor": cursor,
             },
-            headers={
-                "x-project-id": str(project_id) if project_id is not None else None,
-            },
             request_options=request_options,
         )
         try:
@@ -203,9 +196,9 @@ class RawCommentsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -214,9 +207,9 @@ class RawCommentsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -225,9 +218,9 @@ class RawCommentsClient:
                 raise ForbiddenError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -236,9 +229,9 @@ class RawCommentsClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -247,9 +240,9 @@ class RawCommentsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -269,32 +262,28 @@ class RawCommentsClient:
         *,
         revision_id: str,
         decision: ReviewCommentDecision,
-        project_id: typing.Optional[str] = None,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> HttpResponse[ProjectActionResult]:
+    ) -> HttpResponse[ReviewCommentsResponse]:
         """
-        Approve or reject the latest pending revision. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Approve or reject the specified latest PENDING or FAILED revision. Requires comments:review. Approval publishes that revision; rejection retains an earlier approved version. A key decision has no verified moderator-account attribution. A stale or already decided revision returns REVISION_ALREADY_REVIEWED. Refresh before another action or after an uncertain network outcome; this operation does not replay Idempotency-Key. Available while frozen.
 
         Parameters
         ----------
         comment_id : str
-            RECOMS identifier generated by the service.
+            RECOMS-generated UUID. Copy it from the corresponding project, member, comment or revision response; identifiers are not interchangeable.
 
         revision_id : str
-            Latest pending revision being reviewed; refresh if another decision has already been recorded.
+            Latest PENDING or FAILED revision being reviewed; refresh if another decision has already been recorded. Copy the revision ID, not the comment ID.
 
         decision : ReviewCommentDecision
             Publish this revision or reject it while retaining any previously approved public version.
-
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        HttpResponse[ProjectActionResult]
+        HttpResponse[ReviewCommentsResponse]
             Operation completed successfully.
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -306,7 +295,6 @@ class RawCommentsClient:
             },
             headers={
                 "content-type": "application/json",
-                "x-project-id": str(project_id) if project_id is not None else None,
                 "Idempotency-Key": generate_idempotency_key(),
             },
             request_options=request_options,
@@ -315,9 +303,9 @@ class RawCommentsClient:
         try:
             if 200 <= _response.status_code < 300:
                 _data = typing.cast(
-                    ProjectActionResult,
+                    ReviewCommentsResponse,
                     parse_obj_as(
-                        type_=ProjectActionResult,  # type: ignore
+                        type_=ReviewCommentsResponse,  # type: ignore
                         object_=_response.json(),
                     ),
                 )
@@ -326,9 +314,9 @@ class RawCommentsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -337,9 +325,9 @@ class RawCommentsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -348,9 +336,9 @@ class RawCommentsClient:
                 raise ForbiddenError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -359,9 +347,9 @@ class RawCommentsClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -370,9 +358,20 @@ class RawCommentsClient:
                 raise ConflictError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 413:
+                raise ContentTooLargeError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        RequestBodyTooLargeErrorResponse,
+                        parse_obj_as(
+                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -381,9 +380,9 @@ class RawCommentsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -403,38 +402,32 @@ class AsyncRawCommentsClient:
         self._client_wrapper = client_wrapper
 
     async def queues(
-        self, *, project_id: typing.Optional[str] = None, request_options: typing.Optional[RequestOptions] = None
-    ) -> AsyncHttpResponse[ProjectReviewQueues]:
+        self, *, request_options: typing.Optional[RequestOptions] = None
+    ) -> AsyncHttpResponse[QueuesCommentsResponse]:
         """
-        Read the number of revisions awaiting review. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Count the latest PENDING and FAILED revisions of live comments, including pending edits of already published comments. Requires comments:read. Deleted comments are excluded. FAILED is a technical check failure, not rejection. These counts and a separate list are not a shared snapshot. Available while frozen.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        AsyncHttpResponse[ProjectReviewQueues]
+        AsyncHttpResponse[QueuesCommentsResponse]
             Operation completed successfully.
         """
         _response = await self._client_wrapper.httpx_client.request(
             "v1/project/review-queues",
             method="GET",
-            headers={
-                "x-project-id": str(project_id) if project_id is not None else None,
-            },
             request_options=request_options,
         )
         try:
             if 200 <= _response.status_code < 300:
                 _data = typing.cast(
-                    ProjectReviewQueues,
+                    QueuesCommentsResponse,
                     parse_obj_as(
-                        type_=ProjectReviewQueues,  # type: ignore
+                        type_=QueuesCommentsResponse,  # type: ignore
                         object_=_response.json(),
                     ),
                 )
@@ -443,9 +436,9 @@ class AsyncRawCommentsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -454,9 +447,9 @@ class AsyncRawCommentsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -465,9 +458,9 @@ class AsyncRawCommentsClient:
                 raise ForbiddenError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -476,9 +469,9 @@ class AsyncRawCommentsClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -487,9 +480,9 @@ class AsyncRawCommentsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -511,15 +504,15 @@ class AsyncRawCommentsClient:
         sort: typing.Optional[DashboardCommentSort] = None,
         limit: typing.Optional[int] = None,
         cursor: typing.Optional[str] = None,
-        project_id: typing.Optional[str] = None,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> AsyncHttpResponse[DashboardComments]:
         """
-        List comments including moderation state. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        List roots and replies with their latest moderation revision. Requires comments:read. Filter status follows the latest revision, so an approved comment with a pending edit appears under PENDING. Creation time or current reaction/reply counts determine order; ID breaks ties. Continue with nextCursor and identical filters/sort; null ends pagination. Pages are not a snapshot. hasComments ignores filters; queues describes moderation backlog. Available while frozen; no write permits are consumed.
 
         Parameters
         ----------
         search : typing.Optional[str]
+            Text search in comment content; at most 512 Unicode code points. Omit or use an empty string for no text filter.
 
         status : typing.Optional[DashboardCommentStatus]
             Filter by latest revision decision or deleted node. ALL and unpublished states require moderation access.
@@ -528,11 +521,10 @@ class AsyncRawCommentsClient:
             Creation time descending or ascending, total reactions descending, or published direct reply count descending; identifier breaks ties.
 
         limit : typing.Optional[int]
+            Maximum rows in this page, inclusive range 1–100.
 
         cursor : typing.Optional[str]
-
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
+            Opaque nextCursor from the preceding page. Keep filters and sort unchanged; incompatible tokens return INVALID_CURSOR. Omit to restart. Pagination is not a snapshot.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -552,9 +544,6 @@ class AsyncRawCommentsClient:
                 "limit": limit,
                 "cursor": cursor,
             },
-            headers={
-                "x-project-id": str(project_id) if project_id is not None else None,
-            },
             request_options=request_options,
         )
         try:
@@ -571,9 +560,9 @@ class AsyncRawCommentsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -582,9 +571,9 @@ class AsyncRawCommentsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -593,9 +582,9 @@ class AsyncRawCommentsClient:
                 raise ForbiddenError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -604,9 +593,9 @@ class AsyncRawCommentsClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -615,9 +604,9 @@ class AsyncRawCommentsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -637,32 +626,28 @@ class AsyncRawCommentsClient:
         *,
         revision_id: str,
         decision: ReviewCommentDecision,
-        project_id: typing.Optional[str] = None,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> AsyncHttpResponse[ProjectActionResult]:
+    ) -> AsyncHttpResponse[ReviewCommentsResponse]:
         """
-        Approve or reject the latest pending revision. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Approve or reject the specified latest PENDING or FAILED revision. Requires comments:review. Approval publishes that revision; rejection retains an earlier approved version. A key decision has no verified moderator-account attribution. A stale or already decided revision returns REVISION_ALREADY_REVIEWED. Refresh before another action or after an uncertain network outcome; this operation does not replay Idempotency-Key. Available while frozen.
 
         Parameters
         ----------
         comment_id : str
-            RECOMS identifier generated by the service.
+            RECOMS-generated UUID. Copy it from the corresponding project, member, comment or revision response; identifiers are not interchangeable.
 
         revision_id : str
-            Latest pending revision being reviewed; refresh if another decision has already been recorded.
+            Latest PENDING or FAILED revision being reviewed; refresh if another decision has already been recorded. Copy the revision ID, not the comment ID.
 
         decision : ReviewCommentDecision
             Publish this revision or reject it while retaining any previously approved public version.
-
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        AsyncHttpResponse[ProjectActionResult]
+        AsyncHttpResponse[ReviewCommentsResponse]
             Operation completed successfully.
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -674,7 +659,6 @@ class AsyncRawCommentsClient:
             },
             headers={
                 "content-type": "application/json",
-                "x-project-id": str(project_id) if project_id is not None else None,
                 "Idempotency-Key": generate_idempotency_key(),
             },
             request_options=request_options,
@@ -683,9 +667,9 @@ class AsyncRawCommentsClient:
         try:
             if 200 <= _response.status_code < 300:
                 _data = typing.cast(
-                    ProjectActionResult,
+                    ReviewCommentsResponse,
                     parse_obj_as(
-                        type_=ProjectActionResult,  # type: ignore
+                        type_=ReviewCommentsResponse,  # type: ignore
                         object_=_response.json(),
                     ),
                 )
@@ -694,9 +678,9 @@ class AsyncRawCommentsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -705,9 +689,9 @@ class AsyncRawCommentsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -716,9 +700,9 @@ class AsyncRawCommentsClient:
                 raise ForbiddenError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -727,9 +711,9 @@ class AsyncRawCommentsClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -738,9 +722,20 @@ class AsyncRawCommentsClient:
                 raise ConflictError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 413:
+                raise ContentTooLargeError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        RequestBodyTooLargeErrorResponse,
+                        parse_obj_as(
+                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -749,9 +744,9 @@ class AsyncRawCommentsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),

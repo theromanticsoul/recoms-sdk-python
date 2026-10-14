@@ -7,7 +7,13 @@ from importlib import import_module
 
 if typing.TYPE_CHECKING:
     from .configure_provider_credential_intent import ConfigureProviderCredentialIntent
-_dynamic_imports: typing.Dict[str, str] = {"ConfigureProviderCredentialIntent": ".configure_provider_credential_intent"}
+    from .configure_provider_response import ConfigureProviderResponse
+    from .test_provider_response import TestProviderResponse
+_dynamic_imports: typing.Dict[str, str] = {
+    "ConfigureProviderCredentialIntent": ".configure_provider_credential_intent",
+    "ConfigureProviderResponse": ".configure_provider_response",
+    "TestProviderResponse": ".test_provider_response",
+}
 
 
 def __getattr__(attr_name: str) -> typing.Any:
@@ -31,4 +37,4 @@ def __dir__():
     return sorted(lazy_attrs)
 
 
-__all__ = ["ConfigureProviderCredentialIntent"]
+__all__ = ["ConfigureProviderCredentialIntent", "ConfigureProviderResponse", "TestProviderResponse"]

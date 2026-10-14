@@ -10,14 +10,23 @@ from ...core.idempotency import generate_idempotency_key
 from ...core.parse_error import ParsingError
 from ...core.pydantic_utilities import parse_obj_as
 from ...core.request_options import RequestOptions
+from ...errors.bad_gateway_error import BadGatewayError
 from ...errors.bad_request_error import BadRequestError
+from ...errors.conflict_error import ConflictError
+from ...errors.content_too_large_error import ContentTooLargeError
 from ...errors.forbidden_error import ForbiddenError
 from ...errors.internal_server_error import InternalServerError
 from ...errors.not_found_error import NotFoundError
+from ...errors.too_many_requests_error import TooManyRequestsError
 from ...errors.unauthorized_error import UnauthorizedError
-from ...types.error_response import ErrorResponse
-from ...types.project_action_result import ProjectActionResult
+from ...types.authentication_required_error_response import AuthenticationRequiredErrorResponse
+from ...types.internal_error_response import InternalErrorResponse
+from ...types.provider_unavailable_error_response import ProviderUnavailableErrorResponse
+from ...types.rate_limited_error_response import RateLimitedErrorResponse
+from ...types.request_body_too_large_error_response import RequestBodyTooLargeErrorResponse
 from .types.configure_provider_credential_intent import ConfigureProviderCredentialIntent
+from .types.configure_provider_response import ConfigureProviderResponse
+from .types.test_provider_response import TestProviderResponse
 from pydantic import ValidationError
 
 # this is used as the default value for optional parameters
@@ -33,27 +42,23 @@ class RawProviderClient:
         *,
         base_url: str,
         model: str,
-        project_id: typing.Optional[str] = None,
         credential: typing.Optional[str] = OMIT,
         credential_intent: typing.Optional[ConfigureProviderCredentialIntent] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> HttpResponse[ProjectActionResult]:
+    ) -> HttpResponse[ConfigureProviderResponse]:
         """
-        configureProjectProvider. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Test and save an OpenAI-compatible HTTPS provider. Requires provider:configure. Unsafe outbound destinations are blocked. Settings are saved only after a successful connection test; a failed candidate does not replace the current configuration. preserve retains an existing credential or accepts an initial one; replace requires credential; remove clears authentication. Credentials are encrypted and never returned. Refresh after PROVIDER_CONFIGURATION_CHANGED; wait Retry-After on RATE_LIMITED. Provider tests do not consume submission quota. Available while frozen.
 
         Parameters
         ----------
         base_url : str
-            OpenAI-compatible API base URL. Connection and outbound destination safety are checked before saving.
+            OpenAI-compatible HTTPS API base URL, 1–2,048 Unicode code points after trimming; for example https://api.openai.com/v1. Do not embed a username or password. Private, loopback and otherwise unsafe destinations are blocked by outbound safety checks, including DNS resolution and redirects. A valid URL is not proof that the provider can be reached.
 
         model : str
-            Non-empty model identifier accepted by that provider.
-
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
+            Provider model identifier, 1–256 Unicode code points after trimming; for example gpt-4.1-mini.
 
         credential : typing.Optional[str]
-            Provider API credential for replace intent; omit otherwise. It is never echoed in responses.
+            Provider API credential, at most 4,096 Unicode code points. Required and non-blank for replace intent. With preserve, an existing credential is retained; on first configuration this value may supply the initial credential. With remove it is ignored. It is never echoed in responses.
 
         credential_intent : typing.Optional[ConfigureProviderCredentialIntent]
             Preserve the current credential, replace it with credential, or remove it for a provider without authentication.
@@ -63,7 +68,7 @@ class RawProviderClient:
 
         Returns
         -------
-        HttpResponse[ProjectActionResult]
+        HttpResponse[ConfigureProviderResponse]
             Operation completed successfully.
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -77,7 +82,6 @@ class RawProviderClient:
             },
             headers={
                 "content-type": "application/json",
-                "x-project-id": str(project_id) if project_id is not None else None,
                 "Idempotency-Key": generate_idempotency_key(),
             },
             request_options=request_options,
@@ -86,9 +90,9 @@ class RawProviderClient:
         try:
             if 200 <= _response.status_code < 300:
                 _data = typing.cast(
-                    ProjectActionResult,
+                    ConfigureProviderResponse,
                     parse_obj_as(
-                        type_=ProjectActionResult,  # type: ignore
+                        type_=ConfigureProviderResponse,  # type: ignore
                         object_=_response.json(),
                     ),
                 )
@@ -97,9 +101,9 @@ class RawProviderClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -108,9 +112,9 @@ class RawProviderClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -119,9 +123,9 @@ class RawProviderClient:
                 raise ForbiddenError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -130,9 +134,42 @@ class RawProviderClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 409:
+                raise ConflictError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        typing.Any,
+                        parse_obj_as(
+                            type_=typing.Any,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 413:
+                raise ContentTooLargeError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        RequestBodyTooLargeErrorResponse,
+                        parse_obj_as(
+                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 429:
+                raise TooManyRequestsError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        RateLimitedErrorResponse,
+                        parse_obj_as(
+                            type_=RateLimitedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -141,9 +178,20 @@ class RawProviderClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 502:
+                raise BadGatewayError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        ProviderUnavailableErrorResponse,
+                        parse_obj_as(
+                            type_=ProviderUnavailableErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -157,23 +205,18 @@ class RawProviderClient:
             )
         raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response_json)
 
-    def test(
-        self, *, project_id: typing.Optional[str] = None, request_options: typing.Optional[RequestOptions] = None
-    ) -> HttpResponse[ProjectActionResult]:
+    def test(self, *, request_options: typing.Optional[RequestOptions] = None) -> HttpResponse[TestProviderResponse]:
         """
-        testProjectProvider. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Retry the saved provider connection. Requires provider:test. Availability and last test outcome may change and the attempt is recorded, but settings are not replaced. Missing/unreadable credentials or an unusable provider return PROVIDER_UNAVAILABLE; concurrent changes return PROVIDER_CONFIGURATION_CHANGED. Respect Retry-After on RATE_LIMITED. This diagnostic call changes test state, consumes provider-test capacity and does not consume comment submission quota. Available while frozen.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        HttpResponse[ProjectActionResult]
+        HttpResponse[TestProviderResponse]
             Operation completed successfully.
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -181,8 +224,6 @@ class RawProviderClient:
             method="POST",
             json={},
             headers={
-                "content-type": "application/json",
-                "x-project-id": str(project_id) if project_id is not None else None,
                 "Idempotency-Key": generate_idempotency_key(),
             },
             request_options=request_options,
@@ -191,9 +232,9 @@ class RawProviderClient:
         try:
             if 200 <= _response.status_code < 300:
                 _data = typing.cast(
-                    ProjectActionResult,
+                    TestProviderResponse,
                     parse_obj_as(
-                        type_=ProjectActionResult,  # type: ignore
+                        type_=TestProviderResponse,  # type: ignore
                         object_=_response.json(),
                     ),
                 )
@@ -202,9 +243,9 @@ class RawProviderClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -213,9 +254,9 @@ class RawProviderClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -224,9 +265,9 @@ class RawProviderClient:
                 raise ForbiddenError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -235,9 +276,42 @@ class RawProviderClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 409:
+                raise ConflictError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        typing.Any,
+                        parse_obj_as(
+                            type_=typing.Any,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 413:
+                raise ContentTooLargeError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        RequestBodyTooLargeErrorResponse,
+                        parse_obj_as(
+                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 429:
+                raise TooManyRequestsError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        RateLimitedErrorResponse,
+                        parse_obj_as(
+                            type_=RateLimitedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -246,9 +320,20 @@ class RawProviderClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 502:
+                raise BadGatewayError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        ProviderUnavailableErrorResponse,
+                        parse_obj_as(
+                            type_=ProviderUnavailableErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -272,27 +357,23 @@ class AsyncRawProviderClient:
         *,
         base_url: str,
         model: str,
-        project_id: typing.Optional[str] = None,
         credential: typing.Optional[str] = OMIT,
         credential_intent: typing.Optional[ConfigureProviderCredentialIntent] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> AsyncHttpResponse[ProjectActionResult]:
+    ) -> AsyncHttpResponse[ConfigureProviderResponse]:
         """
-        configureProjectProvider. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Test and save an OpenAI-compatible HTTPS provider. Requires provider:configure. Unsafe outbound destinations are blocked. Settings are saved only after a successful connection test; a failed candidate does not replace the current configuration. preserve retains an existing credential or accepts an initial one; replace requires credential; remove clears authentication. Credentials are encrypted and never returned. Refresh after PROVIDER_CONFIGURATION_CHANGED; wait Retry-After on RATE_LIMITED. Provider tests do not consume submission quota. Available while frozen.
 
         Parameters
         ----------
         base_url : str
-            OpenAI-compatible API base URL. Connection and outbound destination safety are checked before saving.
+            OpenAI-compatible HTTPS API base URL, 1–2,048 Unicode code points after trimming; for example https://api.openai.com/v1. Do not embed a username or password. Private, loopback and otherwise unsafe destinations are blocked by outbound safety checks, including DNS resolution and redirects. A valid URL is not proof that the provider can be reached.
 
         model : str
-            Non-empty model identifier accepted by that provider.
-
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
+            Provider model identifier, 1–256 Unicode code points after trimming; for example gpt-4.1-mini.
 
         credential : typing.Optional[str]
-            Provider API credential for replace intent; omit otherwise. It is never echoed in responses.
+            Provider API credential, at most 4,096 Unicode code points. Required and non-blank for replace intent. With preserve, an existing credential is retained; on first configuration this value may supply the initial credential. With remove it is ignored. It is never echoed in responses.
 
         credential_intent : typing.Optional[ConfigureProviderCredentialIntent]
             Preserve the current credential, replace it with credential, or remove it for a provider without authentication.
@@ -302,7 +383,7 @@ class AsyncRawProviderClient:
 
         Returns
         -------
-        AsyncHttpResponse[ProjectActionResult]
+        AsyncHttpResponse[ConfigureProviderResponse]
             Operation completed successfully.
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -316,7 +397,6 @@ class AsyncRawProviderClient:
             },
             headers={
                 "content-type": "application/json",
-                "x-project-id": str(project_id) if project_id is not None else None,
                 "Idempotency-Key": generate_idempotency_key(),
             },
             request_options=request_options,
@@ -325,9 +405,9 @@ class AsyncRawProviderClient:
         try:
             if 200 <= _response.status_code < 300:
                 _data = typing.cast(
-                    ProjectActionResult,
+                    ConfigureProviderResponse,
                     parse_obj_as(
-                        type_=ProjectActionResult,  # type: ignore
+                        type_=ConfigureProviderResponse,  # type: ignore
                         object_=_response.json(),
                     ),
                 )
@@ -336,9 +416,9 @@ class AsyncRawProviderClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -347,9 +427,9 @@ class AsyncRawProviderClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -358,9 +438,9 @@ class AsyncRawProviderClient:
                 raise ForbiddenError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -369,9 +449,42 @@ class AsyncRawProviderClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 409:
+                raise ConflictError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        typing.Any,
+                        parse_obj_as(
+                            type_=typing.Any,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 413:
+                raise ContentTooLargeError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        RequestBodyTooLargeErrorResponse,
+                        parse_obj_as(
+                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 429:
+                raise TooManyRequestsError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        RateLimitedErrorResponse,
+                        parse_obj_as(
+                            type_=RateLimitedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -380,9 +493,20 @@ class AsyncRawProviderClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 502:
+                raise BadGatewayError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        ProviderUnavailableErrorResponse,
+                        parse_obj_as(
+                            type_=ProviderUnavailableErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -397,22 +521,19 @@ class AsyncRawProviderClient:
         raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response_json)
 
     async def test(
-        self, *, project_id: typing.Optional[str] = None, request_options: typing.Optional[RequestOptions] = None
-    ) -> AsyncHttpResponse[ProjectActionResult]:
+        self, *, request_options: typing.Optional[RequestOptions] = None
+    ) -> AsyncHttpResponse[TestProviderResponse]:
         """
-        testProjectProvider. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Retry the saved provider connection. Requires provider:test. Availability and last test outcome may change and the attempt is recorded, but settings are not replaced. Missing/unreadable credentials or an unusable provider return PROVIDER_UNAVAILABLE; concurrent changes return PROVIDER_CONFIGURATION_CHANGED. Respect Retry-After on RATE_LIMITED. This diagnostic call changes test state, consumes provider-test capacity and does not consume comment submission quota. Available while frozen.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        AsyncHttpResponse[ProjectActionResult]
+        AsyncHttpResponse[TestProviderResponse]
             Operation completed successfully.
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -420,8 +541,6 @@ class AsyncRawProviderClient:
             method="POST",
             json={},
             headers={
-                "content-type": "application/json",
-                "x-project-id": str(project_id) if project_id is not None else None,
                 "Idempotency-Key": generate_idempotency_key(),
             },
             request_options=request_options,
@@ -430,9 +549,9 @@ class AsyncRawProviderClient:
         try:
             if 200 <= _response.status_code < 300:
                 _data = typing.cast(
-                    ProjectActionResult,
+                    TestProviderResponse,
                     parse_obj_as(
-                        type_=ProjectActionResult,  # type: ignore
+                        type_=TestProviderResponse,  # type: ignore
                         object_=_response.json(),
                     ),
                 )
@@ -441,9 +560,9 @@ class AsyncRawProviderClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -452,9 +571,9 @@ class AsyncRawProviderClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        AuthenticationRequiredErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -463,9 +582,9 @@ class AsyncRawProviderClient:
                 raise ForbiddenError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -474,9 +593,42 @@ class AsyncRawProviderClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        typing.Any,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=typing.Any,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 409:
+                raise ConflictError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        typing.Any,
+                        parse_obj_as(
+                            type_=typing.Any,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 413:
+                raise ContentTooLargeError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        RequestBodyTooLargeErrorResponse,
+                        parse_obj_as(
+                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 429:
+                raise TooManyRequestsError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        RateLimitedErrorResponse,
+                        parse_obj_as(
+                            type_=RateLimitedErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -485,9 +637,20 @@ class AsyncRawProviderClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ErrorResponse,
+                        InternalErrorResponse,
                         parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
+                            type_=InternalErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 502:
+                raise BadGatewayError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        ProviderUnavailableErrorResponse,
+                        parse_obj_as(
+                            type_=ProviderUnavailableErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),

@@ -4,9 +4,10 @@ import typing
 
 from ...core.client_wrapper import AsyncClientWrapper, SyncClientWrapper
 from ...core.request_options import RequestOptions
-from ...types.project_action_result import ProjectActionResult
 from .raw_client import AsyncRawProviderClient, RawProviderClient
 from .types.configure_provider_credential_intent import ConfigureProviderCredentialIntent
+from .types.configure_provider_response import ConfigureProviderResponse
+from .types.test_provider_response import TestProviderResponse
 
 # this is used as the default value for optional parameters
 OMIT = typing.cast(typing.Any, ...)
@@ -32,27 +33,23 @@ class ProviderClient:
         *,
         base_url: str,
         model: str,
-        project_id: typing.Optional[str] = None,
         credential: typing.Optional[str] = OMIT,
         credential_intent: typing.Optional[ConfigureProviderCredentialIntent] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> ProjectActionResult:
+    ) -> ConfigureProviderResponse:
         """
-        configureProjectProvider. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Test and save an OpenAI-compatible HTTPS provider. Requires provider:configure. Unsafe outbound destinations are blocked. Settings are saved only after a successful connection test; a failed candidate does not replace the current configuration. preserve retains an existing credential or accepts an initial one; replace requires credential; remove clears authentication. Credentials are encrypted and never returned. Refresh after PROVIDER_CONFIGURATION_CHANGED; wait Retry-After on RATE_LIMITED. Provider tests do not consume submission quota. Available while frozen.
 
         Parameters
         ----------
         base_url : str
-            OpenAI-compatible API base URL. Connection and outbound destination safety are checked before saving.
+            OpenAI-compatible HTTPS API base URL, 1–2,048 Unicode code points after trimming; for example https://api.openai.com/v1. Do not embed a username or password. Private, loopback and otherwise unsafe destinations are blocked by outbound safety checks, including DNS resolution and redirects. A valid URL is not proof that the provider can be reached.
 
         model : str
-            Non-empty model identifier accepted by that provider.
-
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
+            Provider model identifier, 1–256 Unicode code points after trimming; for example gpt-4.1-mini.
 
         credential : typing.Optional[str]
-            Provider API credential for replace intent; omit otherwise. It is never echoed in responses.
+            Provider API credential, at most 4,096 Unicode code points. Required and non-blank for replace intent. With preserve, an existing credential is retained; on first configuration this value may supply the initial credential. With remove it is ignored. It is never echoed in responses.
 
         credential_intent : typing.Optional[ConfigureProviderCredentialIntent]
             Preserve the current credential, replace it with credential, or remove it for a provider without authentication.
@@ -62,7 +59,7 @@ class ProviderClient:
 
         Returns
         -------
-        ProjectActionResult
+        ConfigureProviderResponse
             Operation completed successfully.
 
         Examples
@@ -73,37 +70,33 @@ class ProviderClient:
             token="YOUR_TOKEN",
         )
         client.project.provider.configure(
-            base_url="baseUrl",
-            model="model",
+            base_url="https://api.openai.com/v1",
+            model="gpt-4.1-mini",
+            credential="example-provider-key-not-a-secret",
+            credential_intent="replace",
         )
         """
         _response = self._raw_client.configure(
             base_url=base_url,
             model=model,
-            project_id=project_id,
             credential=credential,
             credential_intent=credential_intent,
             request_options=request_options,
         )
         return _response.data
 
-    def test(
-        self, *, project_id: typing.Optional[str] = None, request_options: typing.Optional[RequestOptions] = None
-    ) -> ProjectActionResult:
+    def test(self, *, request_options: typing.Optional[RequestOptions] = None) -> TestProviderResponse:
         """
-        testProjectProvider. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Retry the saved provider connection. Requires provider:test. Availability and last test outcome may change and the attempt is recorded, but settings are not replaced. Missing/unreadable credentials or an unusable provider return PROVIDER_UNAVAILABLE; concurrent changes return PROVIDER_CONFIGURATION_CHANGED. Respect Retry-After on RATE_LIMITED. This diagnostic call changes test state, consumes provider-test capacity and does not consume comment submission quota. Available while frozen.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectActionResult
+        TestProviderResponse
             Operation completed successfully.
 
         Examples
@@ -115,7 +108,7 @@ class ProviderClient:
         )
         client.project.provider.test()
         """
-        _response = self._raw_client.test(project_id=project_id, request_options=request_options)
+        _response = self._raw_client.test(request_options=request_options)
         return _response.data
 
 
@@ -139,27 +132,23 @@ class AsyncProviderClient:
         *,
         base_url: str,
         model: str,
-        project_id: typing.Optional[str] = None,
         credential: typing.Optional[str] = OMIT,
         credential_intent: typing.Optional[ConfigureProviderCredentialIntent] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> ProjectActionResult:
+    ) -> ConfigureProviderResponse:
         """
-        configureProjectProvider. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Test and save an OpenAI-compatible HTTPS provider. Requires provider:configure. Unsafe outbound destinations are blocked. Settings are saved only after a successful connection test; a failed candidate does not replace the current configuration. preserve retains an existing credential or accepts an initial one; replace requires credential; remove clears authentication. Credentials are encrypted and never returned. Refresh after PROVIDER_CONFIGURATION_CHANGED; wait Retry-After on RATE_LIMITED. Provider tests do not consume submission quota. Available while frozen.
 
         Parameters
         ----------
         base_url : str
-            OpenAI-compatible API base URL. Connection and outbound destination safety are checked before saving.
+            OpenAI-compatible HTTPS API base URL, 1–2,048 Unicode code points after trimming; for example https://api.openai.com/v1. Do not embed a username or password. Private, loopback and otherwise unsafe destinations are blocked by outbound safety checks, including DNS resolution and redirects. A valid URL is not proof that the provider can be reached.
 
         model : str
-            Non-empty model identifier accepted by that provider.
-
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
+            Provider model identifier, 1–256 Unicode code points after trimming; for example gpt-4.1-mini.
 
         credential : typing.Optional[str]
-            Provider API credential for replace intent; omit otherwise. It is never echoed in responses.
+            Provider API credential, at most 4,096 Unicode code points. Required and non-blank for replace intent. With preserve, an existing credential is retained; on first configuration this value may supply the initial credential. With remove it is ignored. It is never echoed in responses.
 
         credential_intent : typing.Optional[ConfigureProviderCredentialIntent]
             Preserve the current credential, replace it with credential, or remove it for a provider without authentication.
@@ -169,7 +158,7 @@ class AsyncProviderClient:
 
         Returns
         -------
-        ProjectActionResult
+        ConfigureProviderResponse
             Operation completed successfully.
 
         Examples
@@ -185,8 +174,10 @@ class AsyncProviderClient:
 
         async def main() -> None:
             await client.project.provider.configure(
-                base_url="baseUrl",
-                model="model",
+                base_url="https://api.openai.com/v1",
+                model="gpt-4.1-mini",
+                credential="example-provider-key-not-a-secret",
+                credential_intent="replace",
             )
 
 
@@ -195,30 +186,24 @@ class AsyncProviderClient:
         _response = await self._raw_client.configure(
             base_url=base_url,
             model=model,
-            project_id=project_id,
             credential=credential,
             credential_intent=credential_intent,
             request_options=request_options,
         )
         return _response.data
 
-    async def test(
-        self, *, project_id: typing.Optional[str] = None, request_options: typing.Optional[RequestOptions] = None
-    ) -> ProjectActionResult:
+    async def test(self, *, request_options: typing.Optional[RequestOptions] = None) -> TestProviderResponse:
         """
-        testProjectProvider. Authentication is scoped to the specified project. Dashboard sessions are checked against current membership; project keys cannot access another project.
+        Retry the saved provider connection. Requires provider:test. Availability and last test outcome may change and the attempt is recorded, but settings are not replaced. Missing/unreadable credentials or an unusable provider return PROVIDER_UNAVAILABLE; concurrent changes return PROVIDER_CONFIGURATION_CHANGED. Respect Retry-After on RATE_LIMITED. This diagnostic call changes test state, consumes provider-test capacity and does not consume comment submission quota. Available while frozen.
 
         Parameters
         ----------
-        project_id : typing.Optional[str]
-            Required for Dashboard session requests. Project keys determine their own scope; a supplied identifier must match that scope.
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ProjectActionResult
+        TestProviderResponse
             Operation completed successfully.
 
         Examples
@@ -238,5 +223,5 @@ class AsyncProviderClient:
 
         asyncio.run(main())
         """
-        _response = await self._raw_client.test(project_id=project_id, request_options=request_options)
+        _response = await self._raw_client.test(request_options=request_options)
         return _response.data
