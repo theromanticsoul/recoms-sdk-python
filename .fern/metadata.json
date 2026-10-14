@@ -1,0 +1,26 @@
+{
+  "cliVersion": "5.155.8",
+  "generatorName": "fernapi/fern-python-sdk",
+  "generatorVersion": "5.41.0",
+  "generatorConfig": {
+    "client": {
+      "class_name": "RecomsClient"
+    },
+    "optional_auth": true,
+    "default_max_retries": 0,
+    "auto-generate-idempotency-key": {
+      "header-name": "Idempotency-Key",
+      "methods": [
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE"
+      ]
+    }
+  },
+  "originGitCommit": "da94cfeb1abf7e8794c3838aa4796982a1a40fb4",
+  "originGitCommitIsDirty": false,
+  "invokedBy": "manual",
+  "requestedVersion": "0.1.0",
+  "sdkVersion": "0.1.0"
+}
