@@ -44,7 +44,7 @@ class RawReactionsClient:
             Opaque identifier assigned by your backend to the resource being discussed, such as an article or product. Use the same value for its entire discussion. Required, 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. Slashes are accepted; URL-encode it in query parameters. This is an identifier, not a resource URL.
 
         author_user_id : str
-            Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+            UTF-8 percent-encoded author ID from your application. Encode once with JavaScript encodeURIComponent(id) or Python urllib.parse.quote(id, safe="") before supplying this HTTP header or SDK header argument. usr_42 stays usr_42; a literal % becomes %25. The API decodes exactly once, then validates the original 1–512 Unicode code point identifier and checks ownership. Plus is not a space escape. Invalid escapes, UTF-8, null characters or decoded identifiers return VALIDATION_ERROR. Maximum encoded length is 6,144 ASCII characters. JSON authorUserId fields and response IDs are not encoded.
 
         comment_ids : typing.Optional[typing.Union[str, typing.Sequence[str]]]
             Optional rendered comment IDs. Repeat commentId in the query (not comma-separated); at most 100 values. Omit to read all of the author's public reactions in this resource. Comments without a reaction are absent.
@@ -177,7 +177,7 @@ class AsyncRawReactionsClient:
             Opaque identifier assigned by your backend to the resource being discussed, such as an article or product. Use the same value for its entire discussion. Required, 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. Slashes are accepted; URL-encode it in query parameters. This is an identifier, not a resource URL.
 
         author_user_id : str
-            Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+            UTF-8 percent-encoded author ID from your application. Encode once with JavaScript encodeURIComponent(id) or Python urllib.parse.quote(id, safe="") before supplying this HTTP header or SDK header argument. usr_42 stays usr_42; a literal % becomes %25. The API decodes exactly once, then validates the original 1–512 Unicode code point identifier and checks ownership. Plus is not a space escape. Invalid escapes, UTF-8, null characters or decoded identifiers return VALIDATION_ERROR. Maximum encoded length is 6,144 ASCII characters. JSON authorUserId fields and response IDs are not encoded.
 
         comment_ids : typing.Optional[typing.Union[str, typing.Sequence[str]]]
             Optional rendered comment IDs. Repeat commentId in the query (not comma-separated); at most 100 values. Omit to read all of the author's public reactions in this resource. Comments without a reaction are absent.

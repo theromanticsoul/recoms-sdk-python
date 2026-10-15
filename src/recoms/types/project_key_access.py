@@ -6,6 +6,7 @@ import pydantic
 import typing_extensions
 from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
 from ..core.serialization import FieldMetadata
+from .project_permission import ProjectPermission
 
 
 class ProjectKeyAccess(UniversalBaseModel):
@@ -24,7 +25,7 @@ class ProjectKeyAccess(UniversalBaseModel):
     Identifier of the authenticated project API key, not the secret key value.
     """
 
-    permissions: typing.List[str] = pydantic.Field()
+    permissions: typing.List[ProjectPermission] = pydantic.Field()
     """
     Effective permissions of the authenticated key, sorted and without duplicates. Compare these with each operation's required permission. Rights can change after this response; the API checks every request independently.
     """

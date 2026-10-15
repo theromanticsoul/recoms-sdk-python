@@ -60,6 +60,7 @@ class CommentsClient:
     def list(
         self,
         *,
+        author_user_id: typing.Optional[str] = None,
         search: typing.Optional[str] = None,
         status: typing.Optional[ProjectCommentStatus] = None,
         sort: typing.Optional[ProjectCommentSort] = None,
@@ -72,6 +73,9 @@ class CommentsClient:
 
         Parameters
         ----------
+        author_user_id : typing.Optional[str]
+            Optional exact external author identity filter, for a user's comment history. Combines with status/search/sort and must remain unchanged when continuing a cursor.
+
         search : typing.Optional[str]
             Text search in comment content; at most 512 Unicode code points. Omit or use an empty string for no text filter.
 
@@ -102,10 +106,18 @@ class CommentsClient:
         client = RecomsClient(
             token="YOUR_TOKEN",
         )
-        client.project.comments.list()
+        client.project.comments.list(
+            author_user_id="usr_42",
+        )
         """
         _response = self._raw_client.list(
-            search=search, status=status, sort=sort, limit=limit, cursor=cursor, request_options=request_options
+            author_user_id=author_user_id,
+            search=search,
+            status=status,
+            sort=sort,
+            limit=limit,
+            cursor=cursor,
+            request_options=request_options,
         )
         return _response.data
 
@@ -118,7 +130,7 @@ class CommentsClient:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> ReviewCommentsResponse:
         """
-        Approve or reject the specified latest PENDING or FAILED revision. Requires comments:review. Approval publishes that revision; rejection retains an earlier approved version. A key decision has no verified moderator-account attribution. A stale or already decided revision returns REVISION_ALREADY_REVIEWED. Refresh before another action or after an uncertain network outcome; this operation does not replay Idempotency-Key. Available while frozen.
+        Approve or reject the specified latest PENDING or FAILED revision. Requires comments:review. Approval publishes that revision; rejection retains an earlier approved version. A key decision has no verified moderator-account attribution. A stale or already decided revision returns REVISION_ALREADY_REVIEWED. After a conflict or uncertain network outcome, use listProjectComments with comments:read to inspect the comment's latest revision ID and decision before considering another action. comments:review does not imply comments:read; without the read grant, stop and report the unknown outcome for an appropriately scoped caller to verify. Do not submit a decision for a different revision automatically. This operation does not replay Idempotency-Key. Available while frozen.
 
         Parameters
         ----------
@@ -210,6 +222,7 @@ class AsyncCommentsClient:
     async def list(
         self,
         *,
+        author_user_id: typing.Optional[str] = None,
         search: typing.Optional[str] = None,
         status: typing.Optional[ProjectCommentStatus] = None,
         sort: typing.Optional[ProjectCommentSort] = None,
@@ -222,6 +235,9 @@ class AsyncCommentsClient:
 
         Parameters
         ----------
+        author_user_id : typing.Optional[str]
+            Optional exact external author identity filter, for a user's comment history. Combines with status/search/sort and must remain unchanged when continuing a cursor.
+
         search : typing.Optional[str]
             Text search in comment content; at most 512 Unicode code points. Omit or use an empty string for no text filter.
 
@@ -257,13 +273,21 @@ class AsyncCommentsClient:
 
 
         async def main() -> None:
-            await client.project.comments.list()
+            await client.project.comments.list(
+                author_user_id="usr_42",
+            )
 
 
         asyncio.run(main())
         """
         _response = await self._raw_client.list(
-            search=search, status=status, sort=sort, limit=limit, cursor=cursor, request_options=request_options
+            author_user_id=author_user_id,
+            search=search,
+            status=status,
+            sort=sort,
+            limit=limit,
+            cursor=cursor,
+            request_options=request_options,
         )
         return _response.data
 
@@ -276,7 +300,7 @@ class AsyncCommentsClient:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> ReviewCommentsResponse:
         """
-        Approve or reject the specified latest PENDING or FAILED revision. Requires comments:review. Approval publishes that revision; rejection retains an earlier approved version. A key decision has no verified moderator-account attribution. A stale or already decided revision returns REVISION_ALREADY_REVIEWED. Refresh before another action or after an uncertain network outcome; this operation does not replay Idempotency-Key. Available while frozen.
+        Approve or reject the specified latest PENDING or FAILED revision. Requires comments:review. Approval publishes that revision; rejection retains an earlier approved version. A key decision has no verified moderator-account attribution. A stale or already decided revision returns REVISION_ALREADY_REVIEWED. After a conflict or uncertain network outcome, use listProjectComments with comments:read to inspect the comment's latest revision ID and decision before considering another action. comments:review does not imply comments:read; without the read grant, stop and report the unknown outcome for an appropriately scoped caller to verify. Do not submit a decision for a different revision automatically. This operation does not replay Idempotency-Key. Available while frozen.
 
         Parameters
         ----------

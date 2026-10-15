@@ -2,7 +2,8 @@
 
 import typing
 
+from .author_blocked_error import AuthorBlockedError
 from .operation_error import OperationError
 from .validation_error import ValidationError
 
-ApiError = typing.Union[ValidationError, OperationError]
+ApiError = typing.Union[ValidationError, OperationError, AuthorBlockedError]

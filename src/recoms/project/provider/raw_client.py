@@ -43,7 +43,7 @@ class RawProviderClient:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> HttpResponse[ConfigureProviderResponse]:
         """
-        Test and save an OpenAI-compatible HTTPS provider. Requires provider:configure. Unsafe outbound destinations are blocked. Settings are saved only after a successful connection test; a failed candidate does not replace the current configuration. preserve retains an existing credential or accepts an initial one; replace requires credential; remove clears authentication. Credentials are encrypted and never returned. Refresh after PROVIDER_CONFIGURATION_CHANGED; wait Retry-After on RATE_LIMITED. Provider tests do not consume submission quota. Available while frozen.
+        Test and save an OpenAI-compatible HTTPS provider. Requires provider:configure. Unsafe outbound destinations are blocked. Settings are saved only after a successful connection test; a failed candidate does not replace the current configuration. preserve retains an existing credential or accepts an initial one; replace requires credential; remove clears authentication. Credentials are encrypted and never returned. After PROVIDER_CONFIGURATION_CHANGED or an uncertain outcome, use getProjectContext with project:read to inspect non-secret provider state before considering another save. provider:configure does not imply project:read; without that read grant, stop and report the unknown outcome for an appropriately scoped caller to verify. Matching URL/model and hasCredential do not prove which secret was saved; do not automatically repeat a credential replacement or removal. A refresh is not a concurrency lock. Wait Retry-After on RATE_LIMITED. Each connection test may consume provider capacity, but not submission quota. Available while frozen.
 
         Parameters
         ----------
@@ -203,7 +203,7 @@ class RawProviderClient:
 
     def test(self, *, request_options: typing.Optional[RequestOptions] = None) -> HttpResponse[TestProviderResponse]:
         """
-        Retry the saved provider connection. Requires provider:test. Availability and last test outcome may change and the attempt is recorded, but settings are not replaced. Missing/unreadable credentials or an unusable provider return PROVIDER_UNAVAILABLE; concurrent changes return PROVIDER_CONFIGURATION_CHANGED. Respect Retry-After on RATE_LIMITED. This diagnostic call changes test state, consumes provider-test capacity and does not consume comment submission quota. Available while frozen.
+        Retry the saved provider connection. Requires provider:test. Availability and last test outcome may change and the attempt is recorded, but settings are not replaced. Missing/unreadable credentials or an unusable provider return PROVIDER_UNAVAILABLE; concurrent changes return PROVIDER_CONFIGURATION_CHANGED. Respect Retry-After on RATE_LIMITED. After a conflict or uncertain outcome, getProjectContext can inspect current connection-health state with the separate project:read permission; provider:test does not imply this grant. Without it, report that verification is unavailable. Current health is not a replay of this attempt. Do not retry automatically after an uncertain outcome: another call consumes provider-test capacity and may incur provider charges. This diagnostic call changes test state but does not consume comment submission quota. Available while frozen.
 
         Parameters
         ----------
@@ -359,7 +359,7 @@ class AsyncRawProviderClient:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> AsyncHttpResponse[ConfigureProviderResponse]:
         """
-        Test and save an OpenAI-compatible HTTPS provider. Requires provider:configure. Unsafe outbound destinations are blocked. Settings are saved only after a successful connection test; a failed candidate does not replace the current configuration. preserve retains an existing credential or accepts an initial one; replace requires credential; remove clears authentication. Credentials are encrypted and never returned. Refresh after PROVIDER_CONFIGURATION_CHANGED; wait Retry-After on RATE_LIMITED. Provider tests do not consume submission quota. Available while frozen.
+        Test and save an OpenAI-compatible HTTPS provider. Requires provider:configure. Unsafe outbound destinations are blocked. Settings are saved only after a successful connection test; a failed candidate does not replace the current configuration. preserve retains an existing credential or accepts an initial one; replace requires credential; remove clears authentication. Credentials are encrypted and never returned. After PROVIDER_CONFIGURATION_CHANGED or an uncertain outcome, use getProjectContext with project:read to inspect non-secret provider state before considering another save. provider:configure does not imply project:read; without that read grant, stop and report the unknown outcome for an appropriately scoped caller to verify. Matching URL/model and hasCredential do not prove which secret was saved; do not automatically repeat a credential replacement or removal. A refresh is not a concurrency lock. Wait Retry-After on RATE_LIMITED. Each connection test may consume provider capacity, but not submission quota. Available while frozen.
 
         Parameters
         ----------
@@ -521,7 +521,7 @@ class AsyncRawProviderClient:
         self, *, request_options: typing.Optional[RequestOptions] = None
     ) -> AsyncHttpResponse[TestProviderResponse]:
         """
-        Retry the saved provider connection. Requires provider:test. Availability and last test outcome may change and the attempt is recorded, but settings are not replaced. Missing/unreadable credentials or an unusable provider return PROVIDER_UNAVAILABLE; concurrent changes return PROVIDER_CONFIGURATION_CHANGED. Respect Retry-After on RATE_LIMITED. This diagnostic call changes test state, consumes provider-test capacity and does not consume comment submission quota. Available while frozen.
+        Retry the saved provider connection. Requires provider:test. Availability and last test outcome may change and the attempt is recorded, but settings are not replaced. Missing/unreadable credentials or an unusable provider return PROVIDER_UNAVAILABLE; concurrent changes return PROVIDER_CONFIGURATION_CHANGED. Respect Retry-After on RATE_LIMITED. After a conflict or uncertain outcome, getProjectContext can inspect current connection-health state with the separate project:read permission; provider:test does not imply this grant. Without it, report that verification is unavailable. Current health is not a replay of this attempt. Do not retry automatically after an uncertain outcome: another call consumes provider-test capacity and may incur provider charges. This diagnostic call changes test state but does not consume comment submission quota. Available while frozen.
 
         Parameters
         ----------

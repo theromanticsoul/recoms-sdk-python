@@ -10,6 +10,8 @@ if typing.TYPE_CHECKING:
     from .analytics_bucket import AnalyticsBucket
     from .analytics_range_preset import AnalyticsRangePreset
     from .api_error import ApiError
+    from .author_blocked_error import AuthorBlockedError
+    from .author_blocked_error_code import AuthorBlockedErrorCode
     from .author_comment import AuthorComment
     from .author_comment_list_response import AuthorCommentListResponse
     from .author_comment_response import AuthorCommentResponse
@@ -17,8 +19,11 @@ if typing.TYPE_CHECKING:
     from .author_reaction import AuthorReaction
     from .author_reaction_list_response import AuthorReactionListResponse
     from .author_reaction_type import AuthorReactionType
+    from .comment_event_data import CommentEventData
     from .comment_list_response import CommentListResponse
     from .comment_response import CommentResponse
+    from .comment_user import CommentUser
+    from .created_webhook import CreatedWebhook
     from .delete_comment_response import DeleteCommentResponse
     from .deleted_comment import DeletedComment
     from .deleted_comment_status import DeletedCommentStatus
@@ -50,6 +55,7 @@ if typing.TYPE_CHECKING:
     from .project_billing_account_plan_code import ProjectBillingAccountPlanCode
     from .project_comment_list_row import ProjectCommentListRow
     from .project_comment_list_row_status import ProjectCommentListRowStatus
+    from .project_comment_list_row_user import ProjectCommentListRowUser
     from .project_comment_moderation_summary import ProjectCommentModerationSummary
     from .project_comment_moderation_summary_comparison import ProjectCommentModerationSummaryComparison
     from .project_comment_moderation_summary_series_item import ProjectCommentModerationSummarySeriesItem
@@ -63,11 +69,13 @@ if typing.TYPE_CHECKING:
     from .project_comments_queues import ProjectCommentsQueues
     from .project_context import ProjectContext
     from .project_key_access import ProjectKeyAccess
+    from .project_permission import ProjectPermission
     from .project_policy_test_result import ProjectPolicyTestResult
     from .project_review_queues import ProjectReviewQueues
     from .project_settings_result import ProjectSettingsResult
     from .project_usage import ProjectUsage
     from .project_usage_period import ProjectUsagePeriod
+    from .project_user import ProjectUser
     from .public_comment import PublicComment
     from .public_comment_status import PublicCommentStatus
     from .reaction_response import ReactionResponse
@@ -75,6 +83,13 @@ if typing.TYPE_CHECKING:
     from .reaction_result_type import ReactionResultType
     from .resource_comment_count import ResourceCommentCount
     from .resource_comment_counts_response import ResourceCommentCountsResponse
+    from .revision_event_data import RevisionEventData
+    from .revision_event_data_status import RevisionEventDataStatus
+    from .user_block import UserBlock
+    from .user_block_actor import UserBlockActor
+    from .user_block_actor_type import UserBlockActorType
+    from .user_deletion import UserDeletion
+    from .user_deletion_status import UserDeletionStatus
     from .validation_details import ValidationDetails
     from .validation_details_item import ValidationDetailsItem
     from .validation_details_item_location import ValidationDetailsItemLocation
@@ -82,11 +97,43 @@ if typing.TYPE_CHECKING:
     from .validation_details_item_rule import ValidationDetailsItemRule
     from .validation_error import ValidationError
     from .validation_error_code import ValidationErrorCode
+    from .webhook import Webhook
+    from .webhook_attempt import WebhookAttempt
+    from .webhook_attempt_failure import WebhookAttemptFailure
+    from .webhook_delivery import WebhookDelivery
+    from .webhook_delivery_detail import WebhookDeliveryDetail
+    from .webhook_delivery_detail_status import WebhookDeliveryDetailStatus
+    from .webhook_delivery_status import WebhookDeliveryStatus
+    from .webhook_event import (
+        WebhookEvent,
+        WebhookEvent_CommentDeleted,
+        WebhookEvent_CommentPublished,
+        WebhookEvent_CommentRevisionCreated,
+        WebhookEvent_CommentRevisionFailed,
+        WebhookEvent_CommentRevisionReviewed,
+        WebhookEvent_UserDeleted,
+    )
+    from .webhook_event_comment_deleted import WebhookEventCommentDeleted
+    from .webhook_event_comment_published import WebhookEventCommentPublished
+    from .webhook_event_comment_published_data import WebhookEventCommentPublishedData
+    from .webhook_event_comment_published_data_status import WebhookEventCommentPublishedDataStatus
+    from .webhook_event_comment_revision_created import WebhookEventCommentRevisionCreated
+    from .webhook_event_comment_revision_failed import WebhookEventCommentRevisionFailed
+    from .webhook_event_comment_revision_failed_data import WebhookEventCommentRevisionFailedData
+    from .webhook_event_comment_revision_failed_data_status import WebhookEventCommentRevisionFailedDataStatus
+    from .webhook_event_comment_revision_reviewed import WebhookEventCommentRevisionReviewed
+    from .webhook_event_comment_revision_reviewed_data import WebhookEventCommentRevisionReviewedData
+    from .webhook_event_comment_revision_reviewed_data_status import WebhookEventCommentRevisionReviewedDataStatus
+    from .webhook_event_type import WebhookEventType
+    from .webhook_event_user_deleted import WebhookEventUserDeleted
+    from .webhook_event_user_deleted_data import WebhookEventUserDeletedData
 _dynamic_imports: typing.Dict[str, str] = {
     "AllowedPolicyTest": ".allowed_policy_test",
     "AnalyticsBucket": ".analytics_bucket",
     "AnalyticsRangePreset": ".analytics_range_preset",
     "ApiError": ".api_error",
+    "AuthorBlockedError": ".author_blocked_error",
+    "AuthorBlockedErrorCode": ".author_blocked_error_code",
     "AuthorComment": ".author_comment",
     "AuthorCommentListResponse": ".author_comment_list_response",
     "AuthorCommentResponse": ".author_comment_response",
@@ -94,8 +141,11 @@ _dynamic_imports: typing.Dict[str, str] = {
     "AuthorReaction": ".author_reaction",
     "AuthorReactionListResponse": ".author_reaction_list_response",
     "AuthorReactionType": ".author_reaction_type",
+    "CommentEventData": ".comment_event_data",
     "CommentListResponse": ".comment_list_response",
     "CommentResponse": ".comment_response",
+    "CommentUser": ".comment_user",
+    "CreatedWebhook": ".created_webhook",
     "DeleteCommentResponse": ".delete_comment_response",
     "DeletedComment": ".deleted_comment",
     "DeletedCommentStatus": ".deleted_comment_status",
@@ -129,6 +179,7 @@ _dynamic_imports: typing.Dict[str, str] = {
     "ProjectBillingAccountPlanCode": ".project_billing_account_plan_code",
     "ProjectCommentListRow": ".project_comment_list_row",
     "ProjectCommentListRowStatus": ".project_comment_list_row_status",
+    "ProjectCommentListRowUser": ".project_comment_list_row_user",
     "ProjectCommentModerationSummary": ".project_comment_moderation_summary",
     "ProjectCommentModerationSummaryComparison": ".project_comment_moderation_summary_comparison",
     "ProjectCommentModerationSummarySeriesItem": ".project_comment_moderation_summary_series_item",
@@ -142,11 +193,13 @@ _dynamic_imports: typing.Dict[str, str] = {
     "ProjectCommentsQueues": ".project_comments_queues",
     "ProjectContext": ".project_context",
     "ProjectKeyAccess": ".project_key_access",
+    "ProjectPermission": ".project_permission",
     "ProjectPolicyTestResult": ".project_policy_test_result",
     "ProjectReviewQueues": ".project_review_queues",
     "ProjectSettingsResult": ".project_settings_result",
     "ProjectUsage": ".project_usage",
     "ProjectUsagePeriod": ".project_usage_period",
+    "ProjectUser": ".project_user",
     "PublicComment": ".public_comment",
     "PublicCommentStatus": ".public_comment_status",
     "ReactionResponse": ".reaction_response",
@@ -154,6 +207,13 @@ _dynamic_imports: typing.Dict[str, str] = {
     "ReactionResultType": ".reaction_result_type",
     "ResourceCommentCount": ".resource_comment_count",
     "ResourceCommentCountsResponse": ".resource_comment_counts_response",
+    "RevisionEventData": ".revision_event_data",
+    "RevisionEventDataStatus": ".revision_event_data_status",
+    "UserBlock": ".user_block",
+    "UserBlockActor": ".user_block_actor",
+    "UserBlockActorType": ".user_block_actor_type",
+    "UserDeletion": ".user_deletion",
+    "UserDeletionStatus": ".user_deletion_status",
     "ValidationDetails": ".validation_details",
     "ValidationDetailsItem": ".validation_details_item",
     "ValidationDetailsItemLocation": ".validation_details_item_location",
@@ -161,6 +221,34 @@ _dynamic_imports: typing.Dict[str, str] = {
     "ValidationDetailsItemRule": ".validation_details_item_rule",
     "ValidationError": ".validation_error",
     "ValidationErrorCode": ".validation_error_code",
+    "Webhook": ".webhook",
+    "WebhookAttempt": ".webhook_attempt",
+    "WebhookAttemptFailure": ".webhook_attempt_failure",
+    "WebhookDelivery": ".webhook_delivery",
+    "WebhookDeliveryDetail": ".webhook_delivery_detail",
+    "WebhookDeliveryDetailStatus": ".webhook_delivery_detail_status",
+    "WebhookDeliveryStatus": ".webhook_delivery_status",
+    "WebhookEvent": ".webhook_event",
+    "WebhookEventCommentDeleted": ".webhook_event_comment_deleted",
+    "WebhookEventCommentPublished": ".webhook_event_comment_published",
+    "WebhookEventCommentPublishedData": ".webhook_event_comment_published_data",
+    "WebhookEventCommentPublishedDataStatus": ".webhook_event_comment_published_data_status",
+    "WebhookEventCommentRevisionCreated": ".webhook_event_comment_revision_created",
+    "WebhookEventCommentRevisionFailed": ".webhook_event_comment_revision_failed",
+    "WebhookEventCommentRevisionFailedData": ".webhook_event_comment_revision_failed_data",
+    "WebhookEventCommentRevisionFailedDataStatus": ".webhook_event_comment_revision_failed_data_status",
+    "WebhookEventCommentRevisionReviewed": ".webhook_event_comment_revision_reviewed",
+    "WebhookEventCommentRevisionReviewedData": ".webhook_event_comment_revision_reviewed_data",
+    "WebhookEventCommentRevisionReviewedDataStatus": ".webhook_event_comment_revision_reviewed_data_status",
+    "WebhookEventType": ".webhook_event_type",
+    "WebhookEventUserDeleted": ".webhook_event_user_deleted",
+    "WebhookEventUserDeletedData": ".webhook_event_user_deleted_data",
+    "WebhookEvent_CommentDeleted": ".webhook_event",
+    "WebhookEvent_CommentPublished": ".webhook_event",
+    "WebhookEvent_CommentRevisionCreated": ".webhook_event",
+    "WebhookEvent_CommentRevisionFailed": ".webhook_event",
+    "WebhookEvent_CommentRevisionReviewed": ".webhook_event",
+    "WebhookEvent_UserDeleted": ".webhook_event",
 }
 
 
@@ -190,6 +278,8 @@ __all__ = [
     "AnalyticsBucket",
     "AnalyticsRangePreset",
     "ApiError",
+    "AuthorBlockedError",
+    "AuthorBlockedErrorCode",
     "AuthorComment",
     "AuthorCommentListResponse",
     "AuthorCommentResponse",
@@ -197,8 +287,11 @@ __all__ = [
     "AuthorReaction",
     "AuthorReactionListResponse",
     "AuthorReactionType",
+    "CommentEventData",
     "CommentListResponse",
     "CommentResponse",
+    "CommentUser",
+    "CreatedWebhook",
     "DeleteCommentResponse",
     "DeletedComment",
     "DeletedCommentStatus",
@@ -232,6 +325,7 @@ __all__ = [
     "ProjectBillingAccountPlanCode",
     "ProjectCommentListRow",
     "ProjectCommentListRowStatus",
+    "ProjectCommentListRowUser",
     "ProjectCommentModerationSummary",
     "ProjectCommentModerationSummaryComparison",
     "ProjectCommentModerationSummarySeriesItem",
@@ -245,11 +339,13 @@ __all__ = [
     "ProjectCommentsQueues",
     "ProjectContext",
     "ProjectKeyAccess",
+    "ProjectPermission",
     "ProjectPolicyTestResult",
     "ProjectReviewQueues",
     "ProjectSettingsResult",
     "ProjectUsage",
     "ProjectUsagePeriod",
+    "ProjectUser",
     "PublicComment",
     "PublicCommentStatus",
     "ReactionResponse",
@@ -257,6 +353,13 @@ __all__ = [
     "ReactionResultType",
     "ResourceCommentCount",
     "ResourceCommentCountsResponse",
+    "RevisionEventData",
+    "RevisionEventDataStatus",
+    "UserBlock",
+    "UserBlockActor",
+    "UserBlockActorType",
+    "UserDeletion",
+    "UserDeletionStatus",
     "ValidationDetails",
     "ValidationDetailsItem",
     "ValidationDetailsItemLocation",
@@ -264,4 +367,32 @@ __all__ = [
     "ValidationDetailsItemRule",
     "ValidationError",
     "ValidationErrorCode",
+    "Webhook",
+    "WebhookAttempt",
+    "WebhookAttemptFailure",
+    "WebhookDelivery",
+    "WebhookDeliveryDetail",
+    "WebhookDeliveryDetailStatus",
+    "WebhookDeliveryStatus",
+    "WebhookEvent",
+    "WebhookEventCommentDeleted",
+    "WebhookEventCommentPublished",
+    "WebhookEventCommentPublishedData",
+    "WebhookEventCommentPublishedDataStatus",
+    "WebhookEventCommentRevisionCreated",
+    "WebhookEventCommentRevisionFailed",
+    "WebhookEventCommentRevisionFailedData",
+    "WebhookEventCommentRevisionFailedDataStatus",
+    "WebhookEventCommentRevisionReviewed",
+    "WebhookEventCommentRevisionReviewedData",
+    "WebhookEventCommentRevisionReviewedDataStatus",
+    "WebhookEventType",
+    "WebhookEventUserDeleted",
+    "WebhookEventUserDeletedData",
+    "WebhookEvent_CommentDeleted",
+    "WebhookEvent_CommentPublished",
+    "WebhookEvent_CommentRevisionCreated",
+    "WebhookEvent_CommentRevisionFailed",
+    "WebhookEvent_CommentRevisionReviewed",
+    "WebhookEvent_UserDeleted",
 ]

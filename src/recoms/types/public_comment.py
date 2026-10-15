@@ -7,6 +7,7 @@ import pydantic
 import typing_extensions
 from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
 from ..core.serialization import FieldMetadata
+from .comment_user import CommentUser
 from .public_comment_status import PublicCommentStatus
 
 
@@ -33,17 +34,18 @@ class PublicComment(UniversalBaseModel):
     """
 
     author_user_id: typing_extensions.Annotated[
-        str,
+        typing.Optional[str],
         FieldMetadata(alias="authorUserId"),
         pydantic.Field(
             alias="authorUserId",
-            description="Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.",
+            description="External author identity. Null only for an anonymous deleted structural node after user erasure.",
         ),
-    ]
+    ] = None
     """
-    Stable external user identifier assigned by your backend after authenticating the end user. Required for every author; anonymous authors are not supported. Accepts 1–512 Unicode code points; U+0000 and unpaired UTF-16 surrogates are forbidden. This is not a RECOMS dashboard account ID or a display name.
+    External author identity. Null only for an anonymous deleted structural node after user erasure.
     """
 
+    user: typing.Optional[CommentUser] = None
     parent_id: typing_extensions.Annotated[
         typing.Optional[str],
         FieldMetadata(alias="parentId"),

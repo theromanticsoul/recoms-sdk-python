@@ -19,9 +19,8 @@
     }
   },
   "originGitCommit": "0d323716f2ecab162149abefdb60f3006be7f740",
-  "originGitCommitIsDirty": false,
-  "invokedBy": "ci",
-  "requestedVersion": "0.4.0",
-  "ciProvider": "github",
-  "sdkVersion": "0.4.0"
+  "originGitCommitIsDirty": true,
+  "invokedBy": "manual",
+  "requestedVersion": "0.5.0",
+  "sdkVersion": "0.5.0"
 }

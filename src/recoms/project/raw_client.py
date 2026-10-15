@@ -125,7 +125,7 @@ class RawProjectClient:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> HttpResponse[UpdateProjectResponse]:
         """
-        Atomically replace the supplied moderation mode, policy or analytics timezone. Requires project:update. Omitted fields remain unchanged; supply at least one. OFF publishes immediately, MANUAL queues review, AI resolves automatically, HYBRID queues suspected violations for review. Rules are trimmed. A timezone changes analytics calendar boundaries, not stored UTC timestamps. Existing decisions are not rerun. Refresh settings before retrying an uncertain outcome; Idempotency-Key replay is not supported. Available while frozen.
+        Atomically replace the supplied moderation mode, policy or analytics timezone. Requires project:update. Omitted fields remain unchanged; supply at least one. OFF publishes immediately, MANUAL queues review, AI resolves automatically, HYBRID queues suspected violations for review. Rules are trimmed. A timezone changes analytics calendar boundaries, not stored UTC timestamps. Existing decisions are not rerun. After an uncertain outcome, call getProjectContext with project:read and compare the supplied fields with current settings before deciding whether another update is needed. project:update does not imply project:read; without that read grant, stop and report the unknown outcome for an appropriately scoped caller to verify. A read is not a concurrency lock; do not overwrite intervening changes automatically. Idempotency-Key replay is not supported. Available while frozen.
 
         Parameters
         ----------
@@ -539,7 +539,7 @@ class AsyncRawProjectClient:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> AsyncHttpResponse[UpdateProjectResponse]:
         """
-        Atomically replace the supplied moderation mode, policy or analytics timezone. Requires project:update. Omitted fields remain unchanged; supply at least one. OFF publishes immediately, MANUAL queues review, AI resolves automatically, HYBRID queues suspected violations for review. Rules are trimmed. A timezone changes analytics calendar boundaries, not stored UTC timestamps. Existing decisions are not rerun. Refresh settings before retrying an uncertain outcome; Idempotency-Key replay is not supported. Available while frozen.
+        Atomically replace the supplied moderation mode, policy or analytics timezone. Requires project:update. Omitted fields remain unchanged; supply at least one. OFF publishes immediately, MANUAL queues review, AI resolves automatically, HYBRID queues suspected violations for review. Rules are trimmed. A timezone changes analytics calendar boundaries, not stored UTC timestamps. Existing decisions are not rerun. After an uncertain outcome, call getProjectContext with project:read and compare the supplied fields with current settings before deciding whether another update is needed. project:update does not imply project:read; without that read grant, stop and report the unknown outcome for an appropriately scoped caller to verify. A read is not a concurrency lock; do not overwrite intervening changes automatically. Idempotency-Key replay is not supported. Available while frozen.
 
         Parameters
         ----------

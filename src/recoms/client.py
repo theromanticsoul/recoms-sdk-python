@@ -15,6 +15,8 @@ if typing.TYPE_CHECKING:
     from .project.client import AsyncProjectClient, ProjectClient
     from .reactions.client import AsyncReactionsClient, ReactionsClient
     from .resources.client import AsyncResourcesClient, ResourcesClient
+    from .users.client import AsyncUsersClient, UsersClient
+    from .webhooks.client import AsyncWebhooksClient, WebhooksClient
 
 
 class RecomsClient:
@@ -104,6 +106,8 @@ class RecomsClient:
         self._resources: typing.Optional[ResourcesClient] = None
         self._comments: typing.Optional[CommentsClient] = None
         self._reactions: typing.Optional[ReactionsClient] = None
+        self._users: typing.Optional[UsersClient] = None
+        self._webhooks: typing.Optional[WebhooksClient] = None
         self._project: typing.Optional[ProjectClient] = None
         self._me: typing.Optional[MeClient] = None
 
@@ -130,6 +134,22 @@ class RecomsClient:
 
             self._reactions = ReactionsClient(client_wrapper=self._client_wrapper)
         return self._reactions
+
+    @property
+    def users(self):
+        if self._users is None:
+            from .users.client import UsersClient  # noqa: E402
+
+            self._users = UsersClient(client_wrapper=self._client_wrapper)
+        return self._users
+
+    @property
+    def webhooks(self):
+        if self._webhooks is None:
+            from .webhooks.client import WebhooksClient  # noqa: E402
+
+            self._webhooks = WebhooksClient(client_wrapper=self._client_wrapper)
+        return self._webhooks
 
     @property
     def project(self):
@@ -256,6 +276,8 @@ class AsyncRecomsClient:
         self._resources: typing.Optional[AsyncResourcesClient] = None
         self._comments: typing.Optional[AsyncCommentsClient] = None
         self._reactions: typing.Optional[AsyncReactionsClient] = None
+        self._users: typing.Optional[AsyncUsersClient] = None
+        self._webhooks: typing.Optional[AsyncWebhooksClient] = None
         self._project: typing.Optional[AsyncProjectClient] = None
         self._me: typing.Optional[AsyncMeClient] = None
 
@@ -282,6 +304,22 @@ class AsyncRecomsClient:
 
             self._reactions = AsyncReactionsClient(client_wrapper=self._client_wrapper)
         return self._reactions
+
+    @property
+    def users(self):
+        if self._users is None:
+            from .users.client import AsyncUsersClient  # noqa: E402
+
+            self._users = AsyncUsersClient(client_wrapper=self._client_wrapper)
+        return self._users
+
+    @property
+    def webhooks(self):
+        if self._webhooks is None:
+            from .webhooks.client import AsyncWebhooksClient  # noqa: E402
+
+            self._webhooks = AsyncWebhooksClient(client_wrapper=self._client_wrapper)
+        return self._webhooks
 
     @property
     def project(self):

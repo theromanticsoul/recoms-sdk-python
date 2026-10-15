@@ -8,6 +8,7 @@ import typing_extensions
 from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
 from ..core.serialization import FieldMetadata
 from .project_comment_list_row_status import ProjectCommentListRowStatus
+from .project_comment_list_row_user import ProjectCommentListRowUser
 from .project_comment_revision import ProjectCommentRevision
 
 
@@ -27,14 +28,20 @@ class ProjectCommentListRow(UniversalBaseModel):
     """
 
     author_user_id: typing_extensions.Annotated[
-        str,
+        typing.Optional[str],
         FieldMetadata(alias="authorUserId"),
         pydantic.Field(
-            alias="authorUserId", description="Stable external author identifier supplied by the integrator."
+            alias="authorUserId",
+            description="Stable external author identifier supplied by the integrator; null only for an anonymized deleted node after user erasure.",
         ),
-    ]
+    ] = None
     """
-    Stable external author identifier supplied by the integrator.
+    Stable external author identifier supplied by the integrator; null only for an anonymized deleted node after user erasure.
+    """
+
+    user: typing.Optional[ProjectCommentListRowUser] = pydantic.Field(default=None)
+    """
+    Current optional profile. Null only for an anonymized deleted structural node.
     """
 
     parent_id: typing_extensions.Annotated[
