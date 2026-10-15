@@ -2,6 +2,6 @@
 
 import typing
 
-DashboardCommentListRowStatus = typing.Union[
+ProjectCommentListRowStatus = typing.Union[
     typing.Literal["APPROVED", "PENDING", "FAILED", "REJECTED", "DELETED"], typing.Any
 ]

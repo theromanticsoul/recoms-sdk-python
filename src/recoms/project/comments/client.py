@@ -4,9 +4,9 @@ import typing
 
 from ...core.client_wrapper import AsyncClientWrapper, SyncClientWrapper
 from ...core.request_options import RequestOptions
-from ...types.dashboard_comment_sort import DashboardCommentSort
-from ...types.dashboard_comment_status import DashboardCommentStatus
-from ...types.dashboard_comments import DashboardComments
+from ...types.project_comment_sort import ProjectCommentSort
+from ...types.project_comment_status import ProjectCommentStatus
+from ...types.project_comments import ProjectComments
 from .raw_client import AsyncRawCommentsClient, RawCommentsClient
 from .types.queues_comments_response import QueuesCommentsResponse
 from .types.review_comment_decision import ReviewCommentDecision
@@ -61,12 +61,12 @@ class CommentsClient:
         self,
         *,
         search: typing.Optional[str] = None,
-        status: typing.Optional[DashboardCommentStatus] = None,
-        sort: typing.Optional[DashboardCommentSort] = None,
+        status: typing.Optional[ProjectCommentStatus] = None,
+        sort: typing.Optional[ProjectCommentSort] = None,
         limit: typing.Optional[int] = None,
         cursor: typing.Optional[str] = None,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> DashboardComments:
+    ) -> ProjectComments:
         """
         List roots and replies with their latest moderation revision. Requires comments:read. Filter status follows the latest revision, so an approved comment with a pending edit appears under PENDING. Creation time or current reaction/reply counts determine order; ID breaks ties. Continue with nextCursor and identical filters/sort; null ends pagination. Pages are not a snapshot. hasComments ignores filters; queues describes moderation backlog. Available while frozen; no write permits are consumed.
 
@@ -75,10 +75,10 @@ class CommentsClient:
         search : typing.Optional[str]
             Text search in comment content; at most 512 Unicode code points. Omit or use an empty string for no text filter.
 
-        status : typing.Optional[DashboardCommentStatus]
+        status : typing.Optional[ProjectCommentStatus]
             Filter by latest revision decision or deleted node. ALL and unpublished states require moderation access.
 
-        sort : typing.Optional[DashboardCommentSort]
+        sort : typing.Optional[ProjectCommentSort]
             Creation time descending or ascending, total reactions descending, or published direct reply count descending; identifier breaks ties.
 
         limit : typing.Optional[int]
@@ -92,7 +92,7 @@ class CommentsClient:
 
         Returns
         -------
-        DashboardComments
+        ProjectComments
             Operation completed successfully.
 
         Examples
@@ -211,12 +211,12 @@ class AsyncCommentsClient:
         self,
         *,
         search: typing.Optional[str] = None,
-        status: typing.Optional[DashboardCommentStatus] = None,
-        sort: typing.Optional[DashboardCommentSort] = None,
+        status: typing.Optional[ProjectCommentStatus] = None,
+        sort: typing.Optional[ProjectCommentSort] = None,
         limit: typing.Optional[int] = None,
         cursor: typing.Optional[str] = None,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> DashboardComments:
+    ) -> ProjectComments:
         """
         List roots and replies with their latest moderation revision. Requires comments:read. Filter status follows the latest revision, so an approved comment with a pending edit appears under PENDING. Creation time or current reaction/reply counts determine order; ID breaks ties. Continue with nextCursor and identical filters/sort; null ends pagination. Pages are not a snapshot. hasComments ignores filters; queues describes moderation backlog. Available while frozen; no write permits are consumed.
 
@@ -225,10 +225,10 @@ class AsyncCommentsClient:
         search : typing.Optional[str]
             Text search in comment content; at most 512 Unicode code points. Omit or use an empty string for no text filter.
 
-        status : typing.Optional[DashboardCommentStatus]
+        status : typing.Optional[ProjectCommentStatus]
             Filter by latest revision decision or deleted node. ALL and unpublished states require moderation access.
 
-        sort : typing.Optional[DashboardCommentSort]
+        sort : typing.Optional[ProjectCommentSort]
             Creation time descending or ascending, total reactions descending, or published direct reply count descending; identifier breaks ties.
 
         limit : typing.Optional[int]
@@ -242,7 +242,7 @@ class AsyncCommentsClient:
 
         Returns
         -------
-        DashboardComments
+        ProjectComments
             Operation completed successfully.
 
         Examples

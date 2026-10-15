@@ -860,7 +860,7 @@ client.reactions.remove(
 <dl>
 <dd>
 
-Read project settings, billing state and non-secret provider configuration. Requires project:read. The key selects the project and its configured permissions remain authoritative. Moderation rules and the recommended reset policy are included for management access. Available while frozen; no write permits are consumed.
+Read project settings, billing state and non-secret provider configuration. Requires project:read. The key selects the project. access returns its keyId and effective permissions in resource:action form, allowing you to choose available operations before sending a request. Permissions can change; the API checks each request independently. Moderation rules and the recommended reset policy are included for management access. Available while frozen; no write permits are consumed.
 </dd>
 </dl>
 </dd>
@@ -1530,7 +1530,7 @@ client.project.comments.queues()
 </dl>
 </details>
 
-<details><summary><code>client.project.comments.<a href="src/recoms/project/comments/client.py">list</a>(...) -> DashboardComments</code></summary>
+<details><summary><code>client.project.comments.<a href="src/recoms/project/comments/client.py">list</a>(...) -> ProjectComments</code></summary>
 <dl>
 <dd>
 
@@ -1589,7 +1589,7 @@ client.project.comments.list()
 <dl>
 <dd>
 
-**status:** `typing.Optional[DashboardCommentStatus]` — Filter by latest revision decision or deleted node. ALL and unpublished states require moderation access.
+**status:** `typing.Optional[ProjectCommentStatus]` — Filter by latest revision decision or deleted node. ALL and unpublished states require moderation access.
     
 </dd>
 </dl>
@@ -1597,7 +1597,7 @@ client.project.comments.list()
 <dl>
 <dd>
 
-**sort:** `typing.Optional[DashboardCommentSort]` — Creation time descending or ascending, total reactions descending, or published direct reply count descending; identifier breaks ties.
+**sort:** `typing.Optional[ProjectCommentSort]` — Creation time descending or ascending, total reactions descending, or published direct reply count descending; identifier breaks ties.
     
 </dd>
 </dl>

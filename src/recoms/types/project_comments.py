@@ -6,12 +6,12 @@ import pydantic
 import typing_extensions
 from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
 from ..core.serialization import FieldMetadata
-from .dashboard_comment_list_row import DashboardCommentListRow
-from .dashboard_comments_queues import DashboardCommentsQueues
+from .project_comment_list_row import ProjectCommentListRow
+from .project_comments_queues import ProjectCommentsQueues
 
 
-class DashboardComments(UniversalBaseModel):
-    data: typing.List[DashboardCommentListRow] = pydantic.Field()
+class ProjectComments(UniversalBaseModel):
+    data: typing.List[ProjectCommentListRow] = pydantic.Field()
     """
     Matching comments in deterministic order; empty when no rows match.
     """
@@ -40,7 +40,7 @@ class DashboardComments(UniversalBaseModel):
     Whether the project contains any comment nodes, independent of the current filters.
     """
 
-    queues: DashboardCommentsQueues = pydantic.Field()
+    queues: ProjectCommentsQueues = pydantic.Field()
     """
     Moderation queue sizes for the project; hidden from read-only roles.
     """

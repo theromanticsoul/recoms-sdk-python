@@ -18,10 +18,10 @@ from ...errors.forbidden_error import ForbiddenError
 from ...errors.internal_server_error import InternalServerError
 from ...errors.not_found_error import NotFoundError
 from ...errors.unauthorized_error import UnauthorizedError
-from ...types.dashboard_comment_sort import DashboardCommentSort
-from ...types.dashboard_comment_status import DashboardCommentStatus
-from ...types.dashboard_comments import DashboardComments
 from ...types.error_response import ErrorResponse
+from ...types.project_comment_sort import ProjectCommentSort
+from ...types.project_comment_status import ProjectCommentStatus
+from ...types.project_comments import ProjectComments
 from .types.queues_comments_response import QueuesCommentsResponse
 from .types.review_comment_decision import ReviewCommentDecision
 from .types.review_comments_response import ReviewCommentsResponse
@@ -66,17 +66,6 @@ class RawCommentsClient:
                     ),
                 )
                 return HttpResponse(response=_response, data=_data)
-            if _response.status_code == 400:
-                raise BadRequestError(
-                    headers=dict(_response.headers),
-                    body=typing.cast(
-                        ErrorResponse,
-                        parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
-                            object_=_response.json(),
-                        ),
-                    ),
-                )
             if _response.status_code == 401:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
@@ -134,12 +123,12 @@ class RawCommentsClient:
         self,
         *,
         search: typing.Optional[str] = None,
-        status: typing.Optional[DashboardCommentStatus] = None,
-        sort: typing.Optional[DashboardCommentSort] = None,
+        status: typing.Optional[ProjectCommentStatus] = None,
+        sort: typing.Optional[ProjectCommentSort] = None,
         limit: typing.Optional[int] = None,
         cursor: typing.Optional[str] = None,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> HttpResponse[DashboardComments]:
+    ) -> HttpResponse[ProjectComments]:
         """
         List roots and replies with their latest moderation revision. Requires comments:read. Filter status follows the latest revision, so an approved comment with a pending edit appears under PENDING. Creation time or current reaction/reply counts determine order; ID breaks ties. Continue with nextCursor and identical filters/sort; null ends pagination. Pages are not a snapshot. hasComments ignores filters; queues describes moderation backlog. Available while frozen; no write permits are consumed.
 
@@ -148,10 +137,10 @@ class RawCommentsClient:
         search : typing.Optional[str]
             Text search in comment content; at most 512 Unicode code points. Omit or use an empty string for no text filter.
 
-        status : typing.Optional[DashboardCommentStatus]
+        status : typing.Optional[ProjectCommentStatus]
             Filter by latest revision decision or deleted node. ALL and unpublished states require moderation access.
 
-        sort : typing.Optional[DashboardCommentSort]
+        sort : typing.Optional[ProjectCommentSort]
             Creation time descending or ascending, total reactions descending, or published direct reply count descending; identifier breaks ties.
 
         limit : typing.Optional[int]
@@ -165,7 +154,7 @@ class RawCommentsClient:
 
         Returns
         -------
-        HttpResponse[DashboardComments]
+        HttpResponse[ProjectComments]
             Operation completed successfully.
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -183,9 +172,9 @@ class RawCommentsClient:
         try:
             if 200 <= _response.status_code < 300:
                 _data = typing.cast(
-                    DashboardComments,
+                    ProjectComments,
                     parse_obj_as(
-                        type_=DashboardComments,  # type: ignore
+                        type_=ProjectComments,  # type: ignore
                         object_=_response.json(),
                     ),
                 )
@@ -430,17 +419,6 @@ class AsyncRawCommentsClient:
                     ),
                 )
                 return AsyncHttpResponse(response=_response, data=_data)
-            if _response.status_code == 400:
-                raise BadRequestError(
-                    headers=dict(_response.headers),
-                    body=typing.cast(
-                        ErrorResponse,
-                        parse_obj_as(
-                            type_=ErrorResponse,  # type: ignore
-                            object_=_response.json(),
-                        ),
-                    ),
-                )
             if _response.status_code == 401:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
@@ -498,12 +476,12 @@ class AsyncRawCommentsClient:
         self,
         *,
         search: typing.Optional[str] = None,
-        status: typing.Optional[DashboardCommentStatus] = None,
-        sort: typing.Optional[DashboardCommentSort] = None,
+        status: typing.Optional[ProjectCommentStatus] = None,
+        sort: typing.Optional[ProjectCommentSort] = None,
         limit: typing.Optional[int] = None,
         cursor: typing.Optional[str] = None,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> AsyncHttpResponse[DashboardComments]:
+    ) -> AsyncHttpResponse[ProjectComments]:
         """
         List roots and replies with their latest moderation revision. Requires comments:read. Filter status follows the latest revision, so an approved comment with a pending edit appears under PENDING. Creation time or current reaction/reply counts determine order; ID breaks ties. Continue with nextCursor and identical filters/sort; null ends pagination. Pages are not a snapshot. hasComments ignores filters; queues describes moderation backlog. Available while frozen; no write permits are consumed.
 
@@ -512,10 +490,10 @@ class AsyncRawCommentsClient:
         search : typing.Optional[str]
             Text search in comment content; at most 512 Unicode code points. Omit or use an empty string for no text filter.
 
-        status : typing.Optional[DashboardCommentStatus]
+        status : typing.Optional[ProjectCommentStatus]
             Filter by latest revision decision or deleted node. ALL and unpublished states require moderation access.
 
-        sort : typing.Optional[DashboardCommentSort]
+        sort : typing.Optional[ProjectCommentSort]
             Creation time descending or ascending, total reactions descending, or published direct reply count descending; identifier breaks ties.
 
         limit : typing.Optional[int]
@@ -529,7 +507,7 @@ class AsyncRawCommentsClient:
 
         Returns
         -------
-        AsyncHttpResponse[DashboardComments]
+        AsyncHttpResponse[ProjectComments]
             Operation completed successfully.
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -547,9 +525,9 @@ class AsyncRawCommentsClient:
         try:
             if 200 <= _response.status_code < 300:
                 _data = typing.cast(
-                    DashboardComments,
+                    ProjectComments,
                     parse_obj_as(
-                        type_=DashboardComments,  # type: ignore
+                        type_=ProjectComments,  # type: ignore
                         object_=_response.json(),
                     ),
                 )

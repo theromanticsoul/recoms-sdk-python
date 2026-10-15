@@ -4,22 +4,21 @@ import typing
 
 import pydantic
 from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
-from .project_membership_role import ProjectMembershipRole
 
 
-class ProjectMembership(UniversalBaseModel):
+class ProjectCommentsQueues(UniversalBaseModel):
     """
-    Current effective access within this project, rechecked against the authenticated principal.
-    """
-
-    id: str = pydantic.Field()
-    """
-    Effective access record ID: membership ID for account access, or API key ID for key access. This is not the project ID.
+    Moderation queue sizes for the project; hidden from read-only roles.
     """
 
-    role: ProjectMembershipRole = pydantic.Field()
+    pending: int = pydantic.Field()
     """
-    Project membership role.
+    Latest revisions waiting for manual review; zero for roles without moderation access.
+    """
+
+    failed: int = pydantic.Field()
+    """
+    Latest revisions with a failed automated check; zero for roles without moderation access.
     """
 
     if IS_PYDANTIC_V2:

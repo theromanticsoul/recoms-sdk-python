@@ -19,16 +19,6 @@ if typing.TYPE_CHECKING:
     from .author_reaction_type import AuthorReactionType
     from .comment_list_response import CommentListResponse
     from .comment_response import CommentResponse
-    from .dashboard_comment_list_row import DashboardCommentListRow
-    from .dashboard_comment_list_row_status import DashboardCommentListRowStatus
-    from .dashboard_comment_revision import DashboardCommentRevision
-    from .dashboard_comment_revision_ai_outcome import DashboardCommentRevisionAiOutcome
-    from .dashboard_comment_revision_reviewed_by import DashboardCommentRevisionReviewedBy
-    from .dashboard_comment_revision_status import DashboardCommentRevisionStatus
-    from .dashboard_comment_sort import DashboardCommentSort
-    from .dashboard_comment_status import DashboardCommentStatus
-    from .dashboard_comments import DashboardComments
-    from .dashboard_comments_queues import DashboardCommentsQueues
     from .delete_comment_response import DeleteCommentResponse
     from .deleted_comment import DeletedComment
     from .deleted_comment_status import DeletedCommentStatus
@@ -58,12 +48,21 @@ if typing.TYPE_CHECKING:
     from .project_billing_account import ProjectBillingAccount
     from .project_billing_account_access_state import ProjectBillingAccountAccessState
     from .project_billing_account_plan_code import ProjectBillingAccountPlanCode
+    from .project_comment_list_row import ProjectCommentListRow
+    from .project_comment_list_row_status import ProjectCommentListRowStatus
     from .project_comment_moderation_summary import ProjectCommentModerationSummary
     from .project_comment_moderation_summary_comparison import ProjectCommentModerationSummaryComparison
     from .project_comment_moderation_summary_series_item import ProjectCommentModerationSummarySeriesItem
+    from .project_comment_revision import ProjectCommentRevision
+    from .project_comment_revision_ai_outcome import ProjectCommentRevisionAiOutcome
+    from .project_comment_revision_reviewed_by import ProjectCommentRevisionReviewedBy
+    from .project_comment_revision_status import ProjectCommentRevisionStatus
+    from .project_comment_sort import ProjectCommentSort
+    from .project_comment_status import ProjectCommentStatus
+    from .project_comments import ProjectComments
+    from .project_comments_queues import ProjectCommentsQueues
     from .project_context import ProjectContext
-    from .project_membership import ProjectMembership
-    from .project_membership_role import ProjectMembershipRole
+    from .project_key_access import ProjectKeyAccess
     from .project_policy_test_result import ProjectPolicyTestResult
     from .project_review_queues import ProjectReviewQueues
     from .project_settings_result import ProjectSettingsResult
@@ -97,16 +96,6 @@ _dynamic_imports: typing.Dict[str, str] = {
     "AuthorReactionType": ".author_reaction_type",
     "CommentListResponse": ".comment_list_response",
     "CommentResponse": ".comment_response",
-    "DashboardCommentListRow": ".dashboard_comment_list_row",
-    "DashboardCommentListRowStatus": ".dashboard_comment_list_row_status",
-    "DashboardCommentRevision": ".dashboard_comment_revision",
-    "DashboardCommentRevisionAiOutcome": ".dashboard_comment_revision_ai_outcome",
-    "DashboardCommentRevisionReviewedBy": ".dashboard_comment_revision_reviewed_by",
-    "DashboardCommentRevisionStatus": ".dashboard_comment_revision_status",
-    "DashboardCommentSort": ".dashboard_comment_sort",
-    "DashboardCommentStatus": ".dashboard_comment_status",
-    "DashboardComments": ".dashboard_comments",
-    "DashboardCommentsQueues": ".dashboard_comments_queues",
     "DeleteCommentResponse": ".delete_comment_response",
     "DeletedComment": ".deleted_comment",
     "DeletedCommentStatus": ".deleted_comment_status",
@@ -138,12 +127,21 @@ _dynamic_imports: typing.Dict[str, str] = {
     "ProjectBillingAccount": ".project_billing_account",
     "ProjectBillingAccountAccessState": ".project_billing_account_access_state",
     "ProjectBillingAccountPlanCode": ".project_billing_account_plan_code",
+    "ProjectCommentListRow": ".project_comment_list_row",
+    "ProjectCommentListRowStatus": ".project_comment_list_row_status",
     "ProjectCommentModerationSummary": ".project_comment_moderation_summary",
     "ProjectCommentModerationSummaryComparison": ".project_comment_moderation_summary_comparison",
     "ProjectCommentModerationSummarySeriesItem": ".project_comment_moderation_summary_series_item",
+    "ProjectCommentRevision": ".project_comment_revision",
+    "ProjectCommentRevisionAiOutcome": ".project_comment_revision_ai_outcome",
+    "ProjectCommentRevisionReviewedBy": ".project_comment_revision_reviewed_by",
+    "ProjectCommentRevisionStatus": ".project_comment_revision_status",
+    "ProjectCommentSort": ".project_comment_sort",
+    "ProjectCommentStatus": ".project_comment_status",
+    "ProjectComments": ".project_comments",
+    "ProjectCommentsQueues": ".project_comments_queues",
     "ProjectContext": ".project_context",
-    "ProjectMembership": ".project_membership",
-    "ProjectMembershipRole": ".project_membership_role",
+    "ProjectKeyAccess": ".project_key_access",
     "ProjectPolicyTestResult": ".project_policy_test_result",
     "ProjectReviewQueues": ".project_review_queues",
     "ProjectSettingsResult": ".project_settings_result",
@@ -201,16 +199,6 @@ __all__ = [
     "AuthorReactionType",
     "CommentListResponse",
     "CommentResponse",
-    "DashboardCommentListRow",
-    "DashboardCommentListRowStatus",
-    "DashboardCommentRevision",
-    "DashboardCommentRevisionAiOutcome",
-    "DashboardCommentRevisionReviewedBy",
-    "DashboardCommentRevisionStatus",
-    "DashboardCommentSort",
-    "DashboardCommentStatus",
-    "DashboardComments",
-    "DashboardCommentsQueues",
     "DeleteCommentResponse",
     "DeletedComment",
     "DeletedCommentStatus",
@@ -242,12 +230,21 @@ __all__ = [
     "ProjectBillingAccount",
     "ProjectBillingAccountAccessState",
     "ProjectBillingAccountPlanCode",
+    "ProjectCommentListRow",
+    "ProjectCommentListRowStatus",
     "ProjectCommentModerationSummary",
     "ProjectCommentModerationSummaryComparison",
     "ProjectCommentModerationSummarySeriesItem",
+    "ProjectCommentRevision",
+    "ProjectCommentRevisionAiOutcome",
+    "ProjectCommentRevisionReviewedBy",
+    "ProjectCommentRevisionStatus",
+    "ProjectCommentSort",
+    "ProjectCommentStatus",
+    "ProjectComments",
+    "ProjectCommentsQueues",
     "ProjectContext",
-    "ProjectMembership",
-    "ProjectMembershipRole",
+    "ProjectKeyAccess",
     "ProjectPolicyTestResult",
     "ProjectReviewQueues",
     "ProjectSettingsResult",

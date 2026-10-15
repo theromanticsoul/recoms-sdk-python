@@ -7,12 +7,12 @@ import pydantic
 import typing_extensions
 from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
 from ..core.serialization import FieldMetadata
-from .dashboard_comment_revision_ai_outcome import DashboardCommentRevisionAiOutcome
-from .dashboard_comment_revision_reviewed_by import DashboardCommentRevisionReviewedBy
-from .dashboard_comment_revision_status import DashboardCommentRevisionStatus
+from .project_comment_revision_ai_outcome import ProjectCommentRevisionAiOutcome
+from .project_comment_revision_reviewed_by import ProjectCommentRevisionReviewedBy
+from .project_comment_revision_status import ProjectCommentRevisionStatus
 
 
-class DashboardCommentRevision(UniversalBaseModel):
+class ProjectCommentRevision(UniversalBaseModel):
     """
     Latest submitted revision, including drafts when the caller has moderation access; null if absent.
     """
@@ -27,7 +27,7 @@ class DashboardCommentRevision(UniversalBaseModel):
     Markdown submitted for this revision; null when its content has been removed.
     """
 
-    status: DashboardCommentRevisionStatus = pydantic.Field()
+    status: ProjectCommentRevisionStatus = pydantic.Field()
     """
     Revision decision: published, awaiting review, technical check failure, or rejected.
     """
@@ -70,7 +70,7 @@ class DashboardCommentRevision(UniversalBaseModel):
     """
 
     reviewed_by: typing_extensions.Annotated[
-        typing.Optional[DashboardCommentRevisionReviewedBy],
+        typing.Optional[ProjectCommentRevisionReviewedBy],
         FieldMetadata(alias="reviewedBy"),
         pydantic.Field(
             alias="reviewedBy", description="Current moderator profile, or null when no profile is available."
@@ -103,7 +103,7 @@ class DashboardCommentRevision(UniversalBaseModel):
     """
 
     ai_outcome: typing_extensions.Annotated[
-        typing.Optional[DashboardCommentRevisionAiOutcome],
+        typing.Optional[ProjectCommentRevisionAiOutcome],
         FieldMetadata(alias="aiOutcome"),
         pydantic.Field(
             alias="aiOutcome",

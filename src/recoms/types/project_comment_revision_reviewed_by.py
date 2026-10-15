@@ -6,7 +6,7 @@ import pydantic
 from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
 
 
-class DashboardCommentRevisionReviewedBy(UniversalBaseModel):
+class ProjectCommentRevisionReviewedBy(UniversalBaseModel):
     """
     Current moderator profile, or null when no profile is available.
     """

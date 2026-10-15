@@ -7,11 +7,11 @@ import pydantic
 import typing_extensions
 from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
 from ..core.serialization import FieldMetadata
-from .dashboard_comment_list_row_status import DashboardCommentListRowStatus
-from .dashboard_comment_revision import DashboardCommentRevision
+from .project_comment_list_row_status import ProjectCommentListRowStatus
+from .project_comment_revision import ProjectCommentRevision
 
 
-class DashboardCommentListRow(UniversalBaseModel):
+class ProjectCommentListRow(UniversalBaseModel):
     id: str = pydantic.Field()
     """
     RECOMS-generated UUID. Copy it from the corresponding project, member, comment or revision response; identifiers are not interchangeable.
@@ -56,13 +56,13 @@ class DashboardCommentListRow(UniversalBaseModel):
     """
 
     latest_revision: typing_extensions.Annotated[
-        typing.Optional[DashboardCommentRevision],
+        typing.Optional[ProjectCommentRevision],
         FieldMetadata(alias="latestRevision"),
         pydantic.Field(alias="latestRevision"),
     ] = None
-    status: DashboardCommentListRowStatus = pydantic.Field()
+    status: ProjectCommentListRowStatus = pydantic.Field()
     """
-    Dashboard state derived from the latest revision, or DELETED for a removed node.
+    Moderation state derived from the latest revision, or DELETED for a removed node.
     """
 
     reply_count: typing_extensions.Annotated[

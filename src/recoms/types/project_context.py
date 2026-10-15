@@ -7,16 +7,16 @@ import typing_extensions
 from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
 from ..core.serialization import FieldMetadata
 from .project import Project
-from .project_membership import ProjectMembership
+from .project_key_access import ProjectKeyAccess
 
 
 class ProjectContext(UniversalBaseModel):
     """
-    Operation result; inspect its fields as documented by this endpoint.
+    Current project settings and the authenticated key's access.
     """
 
     project: Project
-    membership: ProjectMembership
+    access: ProjectKeyAccess
     default_moderation_policy: typing_extensions.Annotated[
         str,
         FieldMetadata(alias="defaultModerationPolicy"),

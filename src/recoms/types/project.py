@@ -14,7 +14,7 @@ from .project_billing_account import ProjectBillingAccount
 
 class Project(UniversalBaseModel):
     """
-    Project settings and non-secret billing/provider state. Sensitive moderation rules are redacted for read-only roles.
+    Project settings, moderation rules and non-secret billing/provider state. Reading project context requires project:read.
     """
 
     id: str = pydantic.Field()
@@ -48,11 +48,12 @@ class Project(UniversalBaseModel):
         str,
         FieldMetadata(alias="moderationPolicy"),
         pydantic.Field(
-            alias="moderationPolicy", description="Project moderation policy, available only with management access."
+            alias="moderationPolicy",
+            description="Current saved moderation policy. Reading it with a project key requires project:read.",
         ),
     ]
     """
-    Project moderation policy, available only with management access.
+    Current saved moderation policy. Reading it with a project key requires project:read.
     """
 
     analytics_timezone: typing_extensions.Annotated[
