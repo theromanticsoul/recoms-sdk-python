@@ -19,11 +19,7 @@ from ...errors.internal_server_error import InternalServerError
 from ...errors.not_found_error import NotFoundError
 from ...errors.too_many_requests_error import TooManyRequestsError
 from ...errors.unauthorized_error import UnauthorizedError
-from ...types.authentication_required_error_response import AuthenticationRequiredErrorResponse
-from ...types.internal_error_response import InternalErrorResponse
-from ...types.provider_unavailable_error_response import ProviderUnavailableErrorResponse
-from ...types.rate_limited_error_response import RateLimitedErrorResponse
-from ...types.request_body_too_large_error_response import RequestBodyTooLargeErrorResponse
+from ...types.error_response import ErrorResponse
 from .types.test_moderation_response import TestModerationResponse
 from pydantic import ValidationError
 
@@ -85,9 +81,9 @@ class RawModerationClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -96,9 +92,9 @@ class RawModerationClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        AuthenticationRequiredErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -107,9 +103,9 @@ class RawModerationClient:
                 raise ForbiddenError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -118,9 +114,9 @@ class RawModerationClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -129,9 +125,9 @@ class RawModerationClient:
                 raise ConflictError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -140,9 +136,9 @@ class RawModerationClient:
                 raise ContentTooLargeError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        RequestBodyTooLargeErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -151,9 +147,9 @@ class RawModerationClient:
                 raise TooManyRequestsError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        RateLimitedErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=RateLimitedErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -162,9 +158,9 @@ class RawModerationClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        InternalErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=InternalErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -173,9 +169,9 @@ class RawModerationClient:
                 raise BadGatewayError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ProviderUnavailableErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=ProviderUnavailableErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -244,9 +240,9 @@ class AsyncRawModerationClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -255,9 +251,9 @@ class AsyncRawModerationClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        AuthenticationRequiredErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -266,9 +262,9 @@ class AsyncRawModerationClient:
                 raise ForbiddenError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -277,9 +273,9 @@ class AsyncRawModerationClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -288,9 +284,9 @@ class AsyncRawModerationClient:
                 raise ConflictError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -299,9 +295,9 @@ class AsyncRawModerationClient:
                 raise ContentTooLargeError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        RequestBodyTooLargeErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -310,9 +306,9 @@ class AsyncRawModerationClient:
                 raise TooManyRequestsError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        RateLimitedErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=RateLimitedErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -321,9 +317,9 @@ class AsyncRawModerationClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        InternalErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=InternalErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -332,9 +328,9 @@ class AsyncRawModerationClient:
                 raise BadGatewayError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        ProviderUnavailableErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=ProviderUnavailableErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),

@@ -7,11 +7,8 @@ from importlib import import_module
 
 if typing.TYPE_CHECKING:
     from .types import (
-        ActivateProjectResponse,
         AnalyticsProjectResponse,
-        FreezeProjectResponse,
         GetProjectResponse,
-        TransferOwnershipProjectResponse,
         UpdateProjectResponse,
         UsageProjectResponse,
         UsageProjectResponseData,
@@ -22,18 +19,15 @@ if typing.TYPE_CHECKING:
     from .moderation import TestModerationResponse
     from .provider import ConfigureProviderCredentialIntent, ConfigureProviderResponse, TestProviderResponse
 _dynamic_imports: typing.Dict[str, str] = {
-    "ActivateProjectResponse": ".types",
     "AnalyticsProjectResponse": ".types",
     "ConfigureProviderCredentialIntent": ".provider",
     "ConfigureProviderResponse": ".provider",
-    "FreezeProjectResponse": ".types",
     "GetProjectResponse": ".types",
     "QueuesCommentsResponse": ".comments",
     "ReviewCommentDecision": ".comments",
     "ReviewCommentsResponse": ".comments",
     "TestModerationResponse": ".moderation",
     "TestProviderResponse": ".provider",
-    "TransferOwnershipProjectResponse": ".types",
     "UpdateProjectResponse": ".types",
     "UsageProjectResponse": ".types",
     "UsageProjectResponseData": ".types",
@@ -66,18 +60,15 @@ def __dir__():
 
 
 __all__ = [
-    "ActivateProjectResponse",
     "AnalyticsProjectResponse",
     "ConfigureProviderCredentialIntent",
     "ConfigureProviderResponse",
-    "FreezeProjectResponse",
     "GetProjectResponse",
     "QueuesCommentsResponse",
     "ReviewCommentDecision",
     "ReviewCommentsResponse",
     "TestModerationResponse",
     "TestProviderResponse",
-    "TransferOwnershipProjectResponse",
     "UpdateProjectResponse",
     "UsageProjectResponse",
     "UsageProjectResponseData",

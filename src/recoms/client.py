@@ -11,7 +11,6 @@ from .environment import RecomsClientEnvironment
 
 if typing.TYPE_CHECKING:
     from .comments.client import AsyncCommentsClient, CommentsClient
-    from .dashboard.client import AsyncDashboardClient, DashboardClient
     from .me.client import AsyncMeClient, MeClient
     from .project.client import AsyncProjectClient, ProjectClient
     from .reactions.client import AsyncReactionsClient, ReactionsClient
@@ -106,7 +105,6 @@ class RecomsClient:
         self._comments: typing.Optional[CommentsClient] = None
         self._reactions: typing.Optional[ReactionsClient] = None
         self._project: typing.Optional[ProjectClient] = None
-        self._dashboard: typing.Optional[DashboardClient] = None
         self._me: typing.Optional[MeClient] = None
 
     @property
@@ -140,14 +138,6 @@ class RecomsClient:
 
             self._project = ProjectClient(client_wrapper=self._client_wrapper)
         return self._project
-
-    @property
-    def dashboard(self):
-        if self._dashboard is None:
-            from .dashboard.client import DashboardClient  # noqa: E402
-
-            self._dashboard = DashboardClient(client_wrapper=self._client_wrapper)
-        return self._dashboard
 
     @property
     def me(self):
@@ -267,7 +257,6 @@ class AsyncRecomsClient:
         self._comments: typing.Optional[AsyncCommentsClient] = None
         self._reactions: typing.Optional[AsyncReactionsClient] = None
         self._project: typing.Optional[AsyncProjectClient] = None
-        self._dashboard: typing.Optional[AsyncDashboardClient] = None
         self._me: typing.Optional[AsyncMeClient] = None
 
     @property
@@ -301,14 +290,6 @@ class AsyncRecomsClient:
 
             self._project = AsyncProjectClient(client_wrapper=self._client_wrapper)
         return self._project
-
-    @property
-    def dashboard(self):
-        if self._dashboard is None:
-            from .dashboard.client import AsyncDashboardClient  # noqa: E402
-
-            self._dashboard = AsyncDashboardClient(client_wrapper=self._client_wrapper)
-        return self._dashboard
 
     @property
     def me(self):

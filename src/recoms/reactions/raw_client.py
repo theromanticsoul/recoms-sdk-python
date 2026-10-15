@@ -14,6 +14,7 @@ from ..core.request_options import RequestOptions
 from ..errors.bad_request_error import BadRequestError
 from ..errors.conflict_error import ConflictError
 from ..errors.content_too_large_error import ContentTooLargeError
+from ..errors.forbidden_error import ForbiddenError
 from ..errors.internal_server_error import InternalServerError
 from ..errors.method_not_allowed_error import MethodNotAllowedError
 from ..errors.not_found_error import NotFoundError
@@ -21,13 +22,8 @@ from ..errors.payment_required_error import PaymentRequiredError
 from ..errors.too_many_requests_error import TooManyRequestsError
 from ..errors.unauthorized_error import UnauthorizedError
 from ..errors.unprocessable_entity_error import UnprocessableEntityError
-from ..types.authentication_required_error_response import AuthenticationRequiredErrorResponse
-from ..types.comment_not_published_error_response import CommentNotPublishedErrorResponse
-from ..types.internal_error_response import InternalErrorResponse
-from ..types.method_not_allowed_error_response import MethodNotAllowedErrorResponse
-from ..types.rate_limited_error_response import RateLimitedErrorResponse
+from ..types.error_response import ErrorResponse
 from ..types.reaction_response import ReactionResponse
-from ..types.request_body_too_large_error_response import RequestBodyTooLargeErrorResponse
 from .types.set_reaction_request_type import SetReactionRequestType
 from pydantic import ValidationError
 
@@ -103,9 +99,9 @@ class RawReactionsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -114,9 +110,9 @@ class RawReactionsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        AuthenticationRequiredErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -125,9 +121,20 @@ class RawReactionsClient:
                 raise PaymentRequiredError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 403:
+                raise ForbiddenError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        ErrorResponse,
+                        parse_obj_as(
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -136,9 +143,9 @@ class RawReactionsClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -147,9 +154,9 @@ class RawReactionsClient:
                 raise MethodNotAllowedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        MethodNotAllowedErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=MethodNotAllowedErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -158,9 +165,9 @@ class RawReactionsClient:
                 raise ConflictError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -169,9 +176,9 @@ class RawReactionsClient:
                 raise ContentTooLargeError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        RequestBodyTooLargeErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -180,9 +187,9 @@ class RawReactionsClient:
                 raise UnprocessableEntityError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        CommentNotPublishedErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=CommentNotPublishedErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -191,9 +198,9 @@ class RawReactionsClient:
                 raise TooManyRequestsError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        RateLimitedErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=RateLimitedErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -202,9 +209,9 @@ class RawReactionsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        InternalErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=InternalErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -273,9 +280,9 @@ class RawReactionsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -284,9 +291,20 @@ class RawReactionsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        AuthenticationRequiredErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 403:
+                raise ForbiddenError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        ErrorResponse,
+                        parse_obj_as(
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -295,9 +313,9 @@ class RawReactionsClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -306,9 +324,9 @@ class RawReactionsClient:
                 raise MethodNotAllowedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        MethodNotAllowedErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=MethodNotAllowedErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -317,9 +335,9 @@ class RawReactionsClient:
                 raise ConflictError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -328,9 +346,9 @@ class RawReactionsClient:
                 raise ContentTooLargeError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        RequestBodyTooLargeErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -339,9 +357,9 @@ class RawReactionsClient:
                 raise UnprocessableEntityError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        CommentNotPublishedErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=CommentNotPublishedErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -350,9 +368,9 @@ class RawReactionsClient:
                 raise TooManyRequestsError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        RateLimitedErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=RateLimitedErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -361,9 +379,9 @@ class RawReactionsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        InternalErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=InternalErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -446,9 +464,9 @@ class AsyncRawReactionsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -457,9 +475,9 @@ class AsyncRawReactionsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        AuthenticationRequiredErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -468,9 +486,20 @@ class AsyncRawReactionsClient:
                 raise PaymentRequiredError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 403:
+                raise ForbiddenError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        ErrorResponse,
+                        parse_obj_as(
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -479,9 +508,9 @@ class AsyncRawReactionsClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -490,9 +519,9 @@ class AsyncRawReactionsClient:
                 raise MethodNotAllowedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        MethodNotAllowedErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=MethodNotAllowedErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -501,9 +530,9 @@ class AsyncRawReactionsClient:
                 raise ConflictError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -512,9 +541,9 @@ class AsyncRawReactionsClient:
                 raise ContentTooLargeError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        RequestBodyTooLargeErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -523,9 +552,9 @@ class AsyncRawReactionsClient:
                 raise UnprocessableEntityError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        CommentNotPublishedErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=CommentNotPublishedErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -534,9 +563,9 @@ class AsyncRawReactionsClient:
                 raise TooManyRequestsError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        RateLimitedErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=RateLimitedErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -545,9 +574,9 @@ class AsyncRawReactionsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        InternalErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=InternalErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -616,9 +645,9 @@ class AsyncRawReactionsClient:
                 raise BadRequestError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -627,9 +656,20 @@ class AsyncRawReactionsClient:
                 raise UnauthorizedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        AuthenticationRequiredErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=AuthenticationRequiredErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
+                            object_=_response.json(),
+                        ),
+                    ),
+                )
+            if _response.status_code == 403:
+                raise ForbiddenError(
+                    headers=dict(_response.headers),
+                    body=typing.cast(
+                        ErrorResponse,
+                        parse_obj_as(
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -638,9 +678,9 @@ class AsyncRawReactionsClient:
                 raise NotFoundError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -649,9 +689,9 @@ class AsyncRawReactionsClient:
                 raise MethodNotAllowedError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        MethodNotAllowedErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=MethodNotAllowedErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -660,9 +700,9 @@ class AsyncRawReactionsClient:
                 raise ConflictError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        typing.Any,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=typing.Any,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -671,9 +711,9 @@ class AsyncRawReactionsClient:
                 raise ContentTooLargeError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        RequestBodyTooLargeErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=RequestBodyTooLargeErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -682,9 +722,9 @@ class AsyncRawReactionsClient:
                 raise UnprocessableEntityError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        CommentNotPublishedErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=CommentNotPublishedErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -693,9 +733,9 @@ class AsyncRawReactionsClient:
                 raise TooManyRequestsError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        RateLimitedErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=RateLimitedErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),
@@ -704,9 +744,9 @@ class AsyncRawReactionsClient:
                 raise InternalServerError(
                     headers=dict(_response.headers),
                     body=typing.cast(
-                        InternalErrorResponse,
+                        ErrorResponse,
                         parse_obj_as(
-                            type_=InternalErrorResponse,  # type: ignore
+                            type_=ErrorResponse,  # type: ignore
                             object_=_response.json(),
                         ),
                     ),

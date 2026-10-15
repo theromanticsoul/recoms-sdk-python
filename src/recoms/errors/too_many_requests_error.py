@@ -3,9 +3,9 @@
 import typing
 
 from ..core.api_error import ApiError
-from ..types.rate_limited_error_response import RateLimitedErrorResponse
+from ..types.error_response import ErrorResponse
 
 
 class TooManyRequestsError(ApiError):
-    def __init__(self, body: RateLimitedErrorResponse, headers: typing.Optional[typing.Dict[str, str]] = None):
+    def __init__(self, body: ErrorResponse, headers: typing.Optional[typing.Dict[str, str]] = None):
         super().__init__(status_code=429, headers=headers, body=body)

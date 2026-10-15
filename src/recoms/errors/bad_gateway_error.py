@@ -3,9 +3,9 @@
 import typing
 
 from ..core.api_error import ApiError
-from ..types.provider_unavailable_error_response import ProviderUnavailableErrorResponse
+from ..types.error_response import ErrorResponse
 
 
 class BadGatewayError(ApiError):
-    def __init__(self, body: ProviderUnavailableErrorResponse, headers: typing.Optional[typing.Dict[str, str]] = None):
+    def __init__(self, body: ErrorResponse, headers: typing.Optional[typing.Dict[str, str]] = None):
         super().__init__(status_code=502, headers=headers, body=body)

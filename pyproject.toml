@@ -6,7 +6,7 @@ license-files = ["LICENSE"]
 
 [tool.poetry]
 name = "recoms"
-version = "0.2.0"
+version = "0.3.0"
 description = "Server-side SDK for the RECOMS comments API"
 readme = "README.md"
 authors = []

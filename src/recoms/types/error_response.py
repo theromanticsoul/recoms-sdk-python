@@ -3,12 +3,16 @@
 import typing
 
 import pydantic
-from ...core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
-from ...types.project_action_result import ProjectActionResult
+from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
+from .api_error import ApiError
 
 
-class TransferOwnershipProjectResponse(UniversalBaseModel):
-    data: ProjectActionResult
+class ErrorResponse(UniversalBaseModel):
+    """
+    JSON error envelope. Inspect error.code and the operation's retry guidance; use X-Request-Id when reporting the problem.
+    """
+
+    error: ApiError
 
     if IS_PYDANTIC_V2:
         model_config: typing.ClassVar[pydantic.ConfigDict] = pydantic.ConfigDict(extra="allow", frozen=True)  # type: ignore # Pydantic v2

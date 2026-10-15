@@ -21,8 +21,8 @@ class ProjectAnalytics(UniversalBaseModel):
     moderation: ModerationAnalytics
     summary: ProjectCommentModerationSummary
     plan_usage: typing_extensions.Annotated[
-        typing.Optional[ProjectUsage], FieldMetadata(alias="planUsage"), pydantic.Field(alias="planUsage")
-    ] = None
+        ProjectUsage, FieldMetadata(alias="planUsage"), pydantic.Field(alias="planUsage")
+    ]
 
     if IS_PYDANTIC_V2:
         model_config: typing.ClassVar[pydantic.ConfigDict] = pydantic.ConfigDict(extra="allow", frozen=True)  # type: ignore # Pydantic v2

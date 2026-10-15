@@ -4,18 +4,21 @@ import typing
 
 import pydantic
 from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
-from .authorship_required_error_response_error import AuthorshipRequiredErrorResponseError
+from .error_message import ErrorMessage
+from .operation_error_code import OperationErrorCode
 
 
-class AuthorshipRequiredErrorResponse(UniversalBaseModel):
+class OperationError(UniversalBaseModel):
     """
-    Error envelope for the documented operation/status. Inspect error.code; message wording may change.
+    Non-validation failure. Use code and the operation's recovery guidance; validation details are not included.
     """
 
-    error: AuthorshipRequiredErrorResponseError = pydantic.Field()
+    code: OperationErrorCode = pydantic.Field()
     """
-    Failure discriminated by code. VALIDATION_ERROR requires nonempty details; other codes contain only code and message.
+    Machine-readable non-validation failure code; branch on this value, not message text.
     """
+
+    message: ErrorMessage
 
     if IS_PYDANTIC_V2:
         model_config: typing.ClassVar[pydantic.ConfigDict] = pydantic.ConfigDict(extra="allow", frozen=True)  # type: ignore # Pydantic v2

@@ -6,11 +6,17 @@ import pydantic
 from ..core.pydantic_utilities import IS_PYDANTIC_V2, UniversalBaseModel
 from .error_message import ErrorMessage
 from .validation_details import ValidationDetails
+from .validation_error_code import ValidationErrorCode
 
 
 class ValidationError(UniversalBaseModel):
     """
     Request validation failure; details is required and contains at least one issue.
+    """
+
+    code: ValidationErrorCode = pydantic.Field()
+    """
+    Invalid request fields or request section. Correct the fields identified by details before retrying.
     """
 
     message: ErrorMessage
